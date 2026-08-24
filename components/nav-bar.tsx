@@ -102,10 +102,11 @@ export async function NavBar() {
         {/* Mobile navigation */}
         <div className="flex items-center gap-3">
           <Sheet>
-            <SheetTrigger asChild className="sm:hidden">
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
-              </Button>
+            <SheetTrigger
+              className="sm:hidden inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-muted"
+              aria-label="Open menu"
+            >
+              <Menu className="h-5 w-5" />
             </SheetTrigger>
 
             <SheetContent side="right" className="bg-card">

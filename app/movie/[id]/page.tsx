@@ -1,6 +1,6 @@
 import { getMovieById } from "@/lib/data/movies";
 import { notFound } from "next/navigation";
-import Image from "next/image";
+// import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import { watchlist, watched } from "@/db/schema";
@@ -83,6 +83,8 @@ export default async function MoviePage({
                             src={movie.backdropUrl}
                             alt=""
                             fill
+                            sizes="100vw"
+                            unoptimized
                             className="object-cover"
                         />
 
@@ -91,16 +93,15 @@ export default async function MoviePage({
                 )}
 
                 <div className="flex flex-col gap-6 sm:flex-row">
-                    <div className="relative h-72 w-48 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
+                    <div className="relative h-[420px] w-[280px] overflow-hidden rounded-lg bg-muted">
                         {movie.posterUrl ? (
-                            <Image
+                            <img
                                 src={movie.posterUrl}
                                 alt={movie.title}
-                                fill
-                                className="object-cover"
+                                className="absolute inset-0 h-full w-full object-cover"
                             />
                         ) : (
-                            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                            <div className="flex h-full items-center justify-center text-muted-foreground">
                                 No poster
                             </div>
                         )}
@@ -204,10 +205,9 @@ export default async function MoviePage({
                                 <p className="text-xs text-muted-foreground">
                                     Cinephile Score{" "}
                                     {ratingCount > 0 &&
-                                        `(${ratingCount} rating${
-                                            ratingCount === 1
-                                                ? ""
-                                                : "s"
+                                        `(${ratingCount} rating${ratingCount === 1
+                                            ? ""
+                                            : "s"
                                         })`}
                                 </p>
                             </div>
@@ -225,32 +225,32 @@ export default async function MoviePage({
             {/* Directors / Writers */}
             {(movie.directors.length > 0 ||
                 movie.writers.length > 0) && (
-                <div className="flex flex-wrap gap-8 text-sm">
-                    {movie.directors.length > 0 && (
-                        <div>
-                            <p className="font-medium">Director</p>
+                    <div className="flex flex-wrap gap-8 text-sm">
+                        {movie.directors.length > 0 && (
+                            <div>
+                                <p className="font-medium">Director</p>
 
-                            <p className="text-muted-foreground">
-                                {movie.directors
-                                    .map((d) => d.name)
-                                    .join(", ")}
-                            </p>
-                        </div>
-                    )}
+                                <p className="text-muted-foreground">
+                                    {movie.directors
+                                        .map((d) => d.name)
+                                        .join(", ")}
+                                </p>
+                            </div>
+                        )}
 
-                    {movie.writers.length > 0 && (
-                        <div>
-                            <p className="font-medium">Writers</p>
+                        {movie.writers.length > 0 && (
+                            <div>
+                                <p className="font-medium">Writers</p>
 
-                            <p className="text-muted-foreground">
-                                {movie.writers
-                                    .map((w) => w.name)
-                                    .join(", ")}
-                            </p>
-                        </div>
-                    )}
-                </div>
-            )}
+                                <p className="text-muted-foreground">
+                                    {movie.writers
+                                        .map((w) => w.name)
+                                        .join(", ")}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                )}
 
             {/* Cast */}
             {movie.cast.length > 0 && (
