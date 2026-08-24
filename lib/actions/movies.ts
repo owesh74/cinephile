@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/require-user";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
@@ -272,10 +273,20 @@ export async function updateMovieAction(
 ) {
   await requireUser();
 
-  const raw = Object.fromEntries(formData.entries()) as Record<
-    string,
-    string
-  >;
+  const raw = {
+    title: String(formData.get("title") ?? ""),
+    originalTitle: String(formData.get("originalTitle") ?? ""),
+    releaseYear: String(formData.get("releaseYear") ?? ""),
+    runtimeMinutes: String(formData.get("runtimeMinutes") ?? ""),
+    description: String(formData.get("description") ?? ""),
+    language: String(formData.get("language") ?? ""),
+    imdbScore: String(formData.get("imdbScore") ?? ""),
+    genres: String(formData.get("genres") ?? ""),
+    countries: String(formData.get("countries") ?? ""),
+    director: String(formData.get("director") ?? ""),
+    writers: String(formData.get("writers") ?? ""),
+    cast: String(formData.get("cast") ?? ""),
+  };
 
   const parsed = createMovieSchema.safeParse(raw);
 
@@ -313,12 +324,21 @@ export async function updateMovieAction(
 
     const supabase = await createClient();
 
-    const ext = posterFile.name.split(".").pop();
+    if (!posterFile.type.startsWith("image/")) {
+      return { error: "Poster file must be an image" };
+    }
+
+    const ext = posterFile.name.split(".").pop()?.toLowerCase() || "jpg";
     const path = `${crypto.randomUUID()}.${ext}`;
+    const arrayBuffer = await posterFile.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
     const { error: uploadError } = await supabase.storage
       .from("posters")
-      .upload(path, posterFile);
+      .upload(path, buffer, {
+        contentType: posterFile.type,
+        upsert: false,
+      });
 
     if (uploadError) {
       return { error: uploadError.message };
@@ -329,6 +349,13 @@ export async function updateMovieAction(
     } = supabase.storage.from("posters").getPublicUrl(path);
 
     posterUrl = publicUrl;
+
+    console.log("POSTER UPLOADED:", {
+      path,
+      posterUrl,
+      size: posterFile.size,
+      type: posterFile.type,
+    });
   }
 
   // Update movie
@@ -469,5 +496,11 @@ export async function updateMovieAction(
     }
   }
 
+  revalidatePath(`/movie/${movieId}`);
+  revalidatePath("/discover");
+  revalidatePath("/");
+
   redirect(`/movie/${movieId}`);
 }
+
+

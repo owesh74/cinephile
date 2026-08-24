@@ -34,6 +34,8 @@ export function MoviePosterGrid({
                 src={movie.posterUrl}
                 alt={movie.title}
                 fill
+                sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, 16vw"
+                unoptimized
                 className="object-cover"
               />
             )}
@@ -49,3 +51,4 @@ export function MoviePosterGrid({
     </div>
   );
 }
+

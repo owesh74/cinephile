@@ -1,6 +1,6 @@
 import { getMovieById } from "@/lib/data/movies";
 import { notFound } from "next/navigation";
-// import Image from "next/image";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import { watchlist, watched } from "@/db/schema";
@@ -21,6 +21,7 @@ export default async function MoviePage({
     params: Promise<{ id: string }>;
 }) {
     const { id } = await params;
+
     const movie = await getMovieById(id);
 
     if (!movie) {
@@ -44,6 +45,7 @@ export default async function MoviePage({
                     eq(watchlist.movieId, id)
                 ),
             }),
+
             db.query.watched.findFirst({
                 where: and(
                     eq(watched.userId, user.id),
@@ -75,8 +77,11 @@ export default async function MoviePage({
 
     return (
         <div className="mx-auto max-w-4xl space-y-8 py-12">
+
             {/* Movie hero */}
             <div className="relative">
+
+                {/* Backdrop */}
                 {movie.backdropUrl && (
                     <div className="absolute inset-x-0 top-0 -z-10 h-80 overflow-hidden">
                         <Image
@@ -93,7 +98,10 @@ export default async function MoviePage({
                 )}
 
                 <div className="flex flex-col gap-6 sm:flex-row">
-                    <div className="relative h-[420px] w-[280px] overflow-hidden rounded-lg bg-muted">
+
+                    {/* POSTER */}
+                    <div className="relative h-[420px] w-[280px] shrink-0 overflow-hidden rounded-lg bg-muted">
+
                         {movie.posterUrl ? (
                             <img
                                 src={movie.posterUrl}
@@ -105,9 +113,12 @@ export default async function MoviePage({
                                 No poster
                             </div>
                         )}
+
                     </div>
 
+                    {/* Movie information */}
                     <div className="flex-1 space-y-3">
+
                         <h1 className="font-display text-4xl font-semibold italic">
                             {movie.title}
                         </h1>
@@ -120,7 +131,12 @@ export default async function MoviePage({
                             )}
 
                         <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
-                            {year && <span>{year}</span>}
+
+                            {year && (
+                                <span>
+                                    {year}
+                                </span>
+                            )}
 
                             {movie.runtimeMinutes && (
                                 <div>
@@ -134,6 +150,7 @@ export default async function MoviePage({
                                         ).padStart(2, "0")}
                                         :00
                                     </p>
+
                                     <p className="text-xs text-muted-foreground">
                                         runtime
                                     </p>
@@ -141,7 +158,9 @@ export default async function MoviePage({
                             )}
 
                             {movie.language && (
-                                <span>{movie.language}</span>
+                                <span>
+                                    {movie.language}
+                                </span>
                             )}
 
                             {movie.countries.length > 0 && (
@@ -149,15 +168,17 @@ export default async function MoviePage({
                                     {movie.countries.join(", ")}
                                 </span>
                             )}
+
                         </div>
 
+                        {/* Genres */}
                         <div className="flex flex-wrap gap-2">
-                            {movie.genres.map((g) => (
+                            {movie.genres.map((genre) => (
                                 <span
-                                    key={g}
+                                    key={genre}
                                     className="rounded-full border px-3 py-1 text-xs"
                                 >
-                                    {g}
+                                    {genre}
                                 </span>
                             ))}
                         </div>
@@ -171,7 +192,7 @@ export default async function MoviePage({
                             />
                         )}
 
-                        {/* Your rating */}
+                        {/* Rating */}
                         {user && (
                             <div>
                                 <p className="mb-1 text-sm font-medium">
@@ -187,6 +208,7 @@ export default async function MoviePage({
 
                         {/* Scores */}
                         <div className="flex gap-6 pt-2">
+
                             <div>
                                 <p className="text-2xl font-semibold text-foreground">
                                     {movie.imdbScore ?? "—"}
@@ -205,52 +227,62 @@ export default async function MoviePage({
                                 <p className="text-xs text-muted-foreground">
                                     Cinephile Score{" "}
                                     {ratingCount > 0 &&
-                                        `(${ratingCount} rating${ratingCount === 1
-                                            ? ""
-                                            : "s"
+                                        `(${ratingCount} rating${
+                                            ratingCount === 1
+                                                ? ""
+                                                : "s"
                                         })`}
                                 </p>
                             </div>
+
                         </div>
 
+                        {/* Description */}
                         {movie.description && (
                             <p className="text-sm leading-relaxed">
                                 {movie.description}
                             </p>
                         )}
+
                     </div>
                 </div>
             </div>
 
-            {/* Directors / Writers */}
+            {/* Director / Writers */}
             {(movie.directors.length > 0 ||
                 movie.writers.length > 0) && (
-                    <div className="flex flex-wrap gap-8 text-sm">
-                        {movie.directors.length > 0 && (
-                            <div>
-                                <p className="font-medium">Director</p>
+                <div className="flex flex-wrap gap-8 text-sm">
 
-                                <p className="text-muted-foreground">
-                                    {movie.directors
-                                        .map((d) => d.name)
-                                        .join(", ")}
-                                </p>
-                            </div>
-                        )}
+                    {movie.directors.length > 0 && (
+                        <div>
+                            <p className="font-medium">
+                                Director
+                            </p>
 
-                        {movie.writers.length > 0 && (
-                            <div>
-                                <p className="font-medium">Writers</p>
+                            <p className="text-muted-foreground">
+                                {movie.directors
+                                    .map((director) => director.name)
+                                    .join(", ")}
+                            </p>
+                        </div>
+                    )}
 
-                                <p className="text-muted-foreground">
-                                    {movie.writers
-                                        .map((w) => w.name)
-                                        .join(", ")}
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                )}
+                    {movie.writers.length > 0 && (
+                        <div>
+                            <p className="font-medium">
+                                Writers
+                            </p>
+
+                            <p className="text-muted-foreground">
+                                {movie.writers
+                                    .map((writer) => writer.name)
+                                    .join(", ")}
+                            </p>
+                        </div>
+                    )}
+
+                </div>
+            )}
 
             {/* Cast */}
             {movie.cast.length > 0 && (
@@ -260,29 +292,41 @@ export default async function MoviePage({
                     </h2>
 
                     <div className="flex flex-wrap gap-4">
-                        {movie.cast.map((c) => (
+
+                        {movie.cast.map((person) => (
                             <div
-                                key={c.personId}
+                                key={person.personId}
                                 className="w-24 text-center text-xs"
                             >
-                                <div className="mb-1 h-24 w-24 rounded-full bg-muted" />
+                                <div className="mb-1 h-24 w-24 overflow-hidden rounded-full bg-muted">
+
+                                    {person.photoUrl ? (
+                                        <img
+                                            src={person.photoUrl}
+                                            alt={person.name}
+                                            className="h-full w-full object-cover"
+                                        />
+                                    ) : null}
+
+                                </div>
 
                                 <p className="font-medium">
-                                    {c.name}
+                                    {person.name}
                                 </p>
 
-                                {c.characterName && (
+                                {person.characterName && (
                                     <p className="text-muted-foreground">
-                                        {c.characterName}
+                                        {person.characterName}
                                     </p>
                                 )}
                             </div>
                         ))}
+
                     </div>
                 </div>
             )}
 
-            {/* Friends who watched this */}
+            {/* Friends */}
             {user && (
                 <div>
                     <p className="font-medium text-foreground">
@@ -292,7 +336,7 @@ export default async function MoviePage({
                     {friendsWhoWatched.length > 0 ? (
                         <p className="text-muted-foreground">
                             {friendsWhoWatched
-                                .map((f) => f.username)
+                                .map((friend) => friend.username)
                                 .join(", ")}
                         </p>
                     ) : (
@@ -314,12 +358,13 @@ export default async function MoviePage({
                 </div>
             )}
 
-            {/* Placeholder sections */}
+            {/* Placeholder */}
             <div className="space-y-2 border-t pt-6 text-sm text-muted-foreground">
                 <p>
                     Lists containing this movie — coming in Phase 9
                 </p>
             </div>
+
         </div>
     );
 }
