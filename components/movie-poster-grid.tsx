@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 
 type GridMovie = {
   id: string;
@@ -30,13 +29,10 @@ export function MoviePosterGrid({
         >
           <div className="relative aspect-[2/3] overflow-hidden rounded-md bg-muted ring-1 ring-border transition-transform duration-200 motion-safe:group-hover:-translate-y-1 group-hover:ring-primary/50">
             {movie.posterUrl && (
-              <Image
+              <img
                 src={movie.posterUrl}
                 alt={movie.title}
-                fill
-                sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, 16vw"
-                unoptimized
-                className="object-cover"
+                className="absolute inset-0 h-full w-full object-cover"
               />
             )}
 
@@ -51,4 +47,3 @@ export function MoviePosterGrid({
     </div>
   );
 }
-

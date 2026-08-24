@@ -3,7 +3,6 @@ import { db } from "@/db";
 import { ratings, movies } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import Link from "next/link";
-import Image from "next/image";
 
 export default async function RatingsPage() {
   const user = await requireUser();
@@ -39,11 +38,10 @@ export default async function RatingsPage() {
             >
               <div className="relative h-16 w-11 flex-shrink-0 overflow-hidden rounded bg-muted">
                 {item.posterUrl && (
-                  <Image
+                  <img
                     src={item.posterUrl}
                     alt={item.title}
-                    fill
-                    className="object-cover"
+                    className="absolute inset-0 h-full w-full object-cover"
                   />
                 )}
               </div>

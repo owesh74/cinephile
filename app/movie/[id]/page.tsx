@@ -1,6 +1,8 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { getMovieById } from "@/lib/data/movies";
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import { watchlist, watched } from "@/db/schema";
@@ -84,13 +86,10 @@ export default async function MoviePage({
                 {/* Backdrop */}
                 {movie.backdropUrl && (
                     <div className="absolute inset-x-0 top-0 -z-10 h-80 overflow-hidden">
-                        <Image
+                        <img
                             src={movie.backdropUrl}
                             alt=""
-                            fill
-                            sizes="100vw"
-                            unoptimized
-                            className="object-cover"
+                            className="absolute inset-0 h-full w-full object-cover"
                         />
 
                         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-background" />

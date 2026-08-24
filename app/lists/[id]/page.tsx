@@ -10,7 +10,6 @@ import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ListMovieAdder } from "@/components/list-movie-adder";
 import { ListItemControls } from "@/components/list-item-controls";
@@ -162,11 +161,10 @@ export default async function ListDetailPage({
             >
               <div className="relative h-16 w-11 flex-shrink-0 overflow-hidden rounded bg-muted">
                 {item.posterUrl && (
-                  <Image
+                  <img
                     src={item.posterUrl}
                     alt={item.title}
-                    fill
-                    className="object-cover"
+                    className="absolute inset-0 h-full w-full object-cover"
                   />
                 )}
               </div>

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 
 type FriendRecMovie = {
   id: string;
@@ -32,11 +31,10 @@ export function FriendRecommendationGrid({
         >
           <div className="relative aspect-[2/3] overflow-hidden rounded-md bg-muted ring-1 ring-border transition-transform duration-200 motion-safe:group-hover:-translate-y-1 group-hover:ring-primary/50">
             {movie.posterUrl && (
-              <Image
+              <img
                 src={movie.posterUrl}
                 alt={movie.title}
-                fill
-                className="object-cover"
+                className="absolute inset-0 h-full w-full object-cover"
               />
             )}
 

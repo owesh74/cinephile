@@ -1,6 +1,5 @@
 import { searchMovies } from "@/lib/data/search";
 import Link from "next/link";
-import Image from "next/image";
 
 export default async function SearchPage({
   searchParams,
@@ -38,7 +37,11 @@ export default async function SearchPage({
           >
             <div className="relative h-16 w-11 flex-shrink-0 overflow-hidden rounded bg-muted">
               {movie.posterUrl && (
-                <Image src={movie.posterUrl} alt={movie.title} fill className="object-cover" />
+                <img
+                  src={movie.posterUrl}
+                  alt={movie.title}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
               )}
             </div>
             <div>

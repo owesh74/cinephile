@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { getComparisonStats, getFriendRecommendations } from "@/lib/data/compare";
 
 export async function FriendComparison({
@@ -45,7 +44,11 @@ export async function FriendComparison({
               <Link key={m.id} href={`/movie/${m.id}`} className="w-16 text-center text-xs">
                 <div className="relative aspect-[2/3] overflow-hidden rounded bg-muted">
                   {m.posterUrl && (
-                    <Image src={m.posterUrl} alt={m.title} fill className="object-cover" />
+                    <img
+                      src={m.posterUrl}
+                      alt={m.title}
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
                   )}
                 </div>
                 <p className="mt-1 truncate">{m.title}</p>
@@ -67,7 +70,11 @@ export async function FriendComparison({
               >
                 <div className="relative aspect-[2/3] overflow-hidden rounded bg-muted">
                   {r.posterUrl && (
-                    <Image src={r.posterUrl} alt={r.title} fill className="object-cover" />
+                    <img
+                      src={r.posterUrl}
+                      alt={r.title}
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
                   )}
                 </div>
                 <p className="mt-1 truncate">{r.title}</p>
