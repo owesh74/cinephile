@@ -113,10 +113,23 @@ async function findOrCreatePerson(name: string) {
 export async function createMovieAction(formData: FormData) {
   await requireUser();
 
-  const raw = Object.fromEntries(formData.entries()) as Record<
-    string,
-    string
-  >;
+  // Build the validation object explicitly so the uploaded File never gets
+  // passed into the movie metadata schema. The poster is handled separately
+  // below as a real File.
+  const raw = {
+    title: String(formData.get("title") ?? ""),
+    originalTitle: String(formData.get("originalTitle") ?? ""),
+    releaseYear: String(formData.get("releaseYear") ?? ""),
+    runtimeMinutes: String(formData.get("runtimeMinutes") ?? ""),
+    description: String(formData.get("description") ?? ""),
+    language: String(formData.get("language") ?? ""),
+    imdbScore: String(formData.get("imdbScore") ?? ""),
+    genres: String(formData.get("genres") ?? ""),
+    countries: String(formData.get("countries") ?? ""),
+    director: String(formData.get("director") ?? ""),
+    writers: String(formData.get("writers") ?? ""),
+    cast: String(formData.get("cast") ?? ""),
+  };
 
   const parsed = createMovieSchema.safeParse(raw);
 
@@ -136,7 +149,17 @@ export async function createMovieAction(formData: FormData) {
 
   let posterUrl: string | undefined;
 
-  const posterFile = formData.get("poster") as File | null;
+  // Keep the uploaded poster completely separate from the text metadata.
+  // Server Actions receive file inputs as File objects inside FormData.
+  const posterEntry = formData.get("poster");
+  const posterFile = posterEntry instanceof File ? posterEntry : null;
+
+  console.log("POSTER CREATE - poster received:", {
+    hasFile: !!posterFile,
+    name: posterFile?.name,
+    type: posterFile?.type,
+    size: posterFile?.size,
+  });
 
   if (posterFile && posterFile.size > 0) {
     if (posterFile.size > 5 * 1024 * 1024) {
@@ -214,6 +237,11 @@ export async function createMovieAction(formData: FormData) {
       imdbScore: data.imdbScore || null,
     })
     .returning();
+
+  console.log("MOVIE CREATE - database result:", {
+    movieId: movie.id,
+    posterUrl: movie.posterUrl,
+  });
 
   if (data.genres) {
     const genreNames = data.genres

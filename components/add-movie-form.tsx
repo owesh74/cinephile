@@ -239,9 +239,7 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
 
                       <div className="min-w-0 flex-1">
                         <div className="mb-3">
-                          <p className="text-sm font-medium">
-                            Poster selected
-                          </p>
+                          <p className="text-sm font-medium">Poster selected</p>
                           <p className="mt-1 truncate text-sm text-muted-foreground">
                             {posterName}
                           </p>
@@ -251,21 +249,13 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
                         </div>
 
                         <div className="flex flex-wrap gap-2">
-                          <label className="cursor-pointer rounded-md border border-border px-3 py-2 text-sm font-medium transition hover:bg-muted">
+                          <button
+                            type="button"
+                            onClick={() => posterInputRef.current?.click()}
+                            className="rounded-md border border-border px-3 py-2 text-sm font-medium transition hover:bg-muted"
+                          >
                             Change poster
-                            <input
-                              ref={posterInputRef}
-                              type="file"
-                              name="poster"
-                              accept="image/*"
-                              className="sr-only"
-                              onChange={(e) =>
-                                handlePosterChange(
-                                  e.target.files?.[0] ?? null
-                                )
-                              }
-                            />
-                          </label>
+                          </button>
 
                           <button
                             type="button"
@@ -279,31 +269,34 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
                     </div>
                   </div>
                 ) : (
-                  <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-border px-5 py-10 text-center transition hover:border-primary hover:bg-muted/30">
+                  <button
+                    type="button"
+                    onClick={() => posterInputRef.current?.click()}
+                    className="flex w-full cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-border px-5 py-10 text-center transition hover:border-primary hover:bg-muted/30"
+                  >
                     <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full border border-border text-xl">
                       +
                     </div>
-
-                    <span className="text-sm font-medium">
-                      Choose poster image
-                    </span>
-
+                    <span className="text-sm font-medium">Choose poster image</span>
                     <span className="mt-1 text-xs text-muted-foreground">
                       Click to browse your computer
                     </span>
-
-                    <input
-                      ref={posterInputRef}
-                      type="file"
-                      name="poster"
-                      accept="image/*"
-                      className="sr-only"
-                      onChange={(e) =>
-                        handlePosterChange(e.target.files?.[0] ?? null)
-                      }
-                    />
-                  </label>
+                  </button>
                 )}
+
+                {/* Keep ONE file input mounted for the entire lifetime of the form.
+                    If the input is conditionally replaced after selecting a file,
+                    the browser drops the selected File from FormData. */}
+                <input
+                  ref={posterInputRef}
+                  type="file"
+                  name="poster"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={(e) =>
+                    handlePosterChange(e.target.files?.[0] ?? null)
+                  }
+                />
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
