@@ -120,3 +120,17 @@ body {
     @apply outline-2 outline-primary;
   }
 }
+
+@keyframes loading {
+  0% {
+    transform: translateX(-150%);
+  }
+
+  50% {
+    transform: translateX(300%);
+  }
+
+  100% {
+    transform: translateX(500%);
+  }
+}

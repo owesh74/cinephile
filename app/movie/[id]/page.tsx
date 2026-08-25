@@ -16,6 +16,7 @@ import { RatingWidget } from "@/components/rating-widget";
 import { getFriendsWhoWatched } from "@/lib/data/friends";
 import { getSimilarMovies } from "@/lib/data/recommendations";
 import { MoviePosterGrid } from "@/components/movie-poster-grid";
+import Link from "next/link";
 
 export default async function MoviePage({
     params,
@@ -226,9 +227,10 @@ export default async function MoviePage({
                                 <p className="text-xs text-muted-foreground">
                                     Cinephile Score{" "}
                                     {ratingCount > 0 &&
-                                        `(${ratingCount} rating${ratingCount === 1
-                                            ? ""
-                                            : "s"
+                                        `(${ratingCount} rating${
+                                            ratingCount === 1
+                                                ? ""
+                                                : "s"
                                         })`}
                                 </p>
                             </div>
@@ -249,15 +251,20 @@ export default async function MoviePage({
             {/* Director / Writers */}
             {(movie.directors.length > 0 || movie.writers.length > 0) && (
                 <div className="space-y-6">
+
+                    {/* DIRECTOR */}
                     {movie.directors.length > 0 && (
                         <div>
-                            <p className="mb-3 text-lg font-medium">Director</p>
+                            <p className="mb-3 text-lg font-medium">
+                                Director
+                            </p>
 
                             <div className="flex flex-wrap gap-4">
                                 {movie.directors.map((person) => (
-                                    <div
+                                    <Link
                                         key={person.personId}
-                                        className="w-24 text-center text-xs"
+                                        href={`/people/${person.personId}`}
+                                        className="block w-24 text-center text-xs transition-opacity hover:opacity-80"
                                     >
                                         <div className="mb-2 h-24 w-24 overflow-hidden rounded-full bg-muted">
                                             {person.photoUrl ? (
@@ -275,22 +282,28 @@ export default async function MoviePage({
                                             )}
                                         </div>
 
-                                        <p className="font-medium">{person.name}</p>
-                                    </div>
+                                        <p className="font-medium">
+                                            {person.name}
+                                        </p>
+                                    </Link>
                                 ))}
                             </div>
                         </div>
                     )}
 
+                    {/* WRITERS */}
                     {movie.writers.length > 0 && (
                         <div>
-                            <p className="mb-3 text-lg font-medium">Writers</p>
+                            <p className="mb-3 text-lg font-medium">
+                                Writers
+                            </p>
 
                             <div className="flex flex-wrap gap-4">
                                 {movie.writers.map((person) => (
-                                    <div
+                                    <Link
                                         key={person.personId}
-                                        className="w-24 text-center text-xs"
+                                        href={`/people/${person.personId}`}
+                                        className="block w-24 text-center text-xs transition-opacity hover:opacity-80"
                                     >
                                         <div className="mb-2 h-24 w-24 overflow-hidden rounded-full bg-muted">
                                             {person.photoUrl ? (
@@ -308,25 +321,31 @@ export default async function MoviePage({
                                             )}
                                         </div>
 
-                                        <p className="font-medium">{person.name}</p>
-                                    </div>
+                                        <p className="font-medium">
+                                            {person.name}
+                                        </p>
+                                    </Link>
                                 ))}
                             </div>
                         </div>
                     )}
+
                 </div>
             )}
 
             {/* Cast */}
             {movie.cast.length > 0 && (
                 <div>
-                    <h2 className="mb-3 text-lg font-medium">Cast</h2>
+                    <h2 className="mb-3 text-lg font-medium">
+                        Cast
+                    </h2>
 
                     <div className="flex flex-wrap gap-4">
                         {movie.cast.map((person) => (
-                            <div
+                            <Link
                                 key={person.personId}
-                                className="w-24 text-center text-xs"
+                                href={`/people/${person.personId}`}
+                                className="block w-24 text-center text-xs transition-opacity hover:opacity-80"
                             >
                                 <div className="mb-2 h-24 w-24 overflow-hidden rounded-full bg-muted">
                                     {person.photoUrl ? (
@@ -344,14 +363,16 @@ export default async function MoviePage({
                                     )}
                                 </div>
 
-                                <p className="font-medium">{person.name}</p>
+                                <p className="font-medium">
+                                    {person.name}
+                                </p>
 
                                 {person.characterName && (
                                     <p className="text-muted-foreground">
                                         {person.characterName}
                                     </p>
                                 )}
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 </div>

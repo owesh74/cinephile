@@ -3,164 +3,171 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { logoutAction } from "@/lib/actions/auth";
+
 import { Button } from "@/components/ui/button";
 import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
+    Avatar,
+    AvatarFallback,
+    AvatarImage,
+} from "@/components/ui/avatar";
+
 import Link from "next/link";
 import { SearchBox } from "@/components/search-box";
+import { NavLink } from "@/components/nav-link";
+import { MobileNav } from "@/components/mobile-nav";
+import { Plus } from "lucide-react";
 
 export async function NavBar() {
-  const supabase = await createClient();
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
 
-  let username: string | null = null;
+    let profile: {
+        username: string;
+        avatarUrl: string | null;
+    } | null = null;
 
-  if (user) {
-    const profile = await db.query.users.findFirst({
-      where: eq(users.id, user.id),
-    });
+    if (user) {
+        const result = await db.query.users.findFirst({
+            where: eq(users.id, user.id),
+        });
 
-    username = profile?.username ?? null;
-  }
+        if (result) {
+            profile = {
+                username: result.username,
+                avatarUrl: result.avatarUrl,
+            };
+        }
+    }
 
-  return (
-    <nav className="border-b border-border bg-card/80 px-6 py-4 backdrop-blur">
-      <div className="flex items-center justify-between gap-4">
-        {/* Logo + Search */}
-        <div className="flex items-center gap-6">
-          <Link
-            href="/"
-            className="font-display text-xl tracking-tight text-primary"
-          >
-            Cinephile
-          </Link>
+    return (
+        <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
+            <div className="mx-auto flex h-16 max-w-[1600px] items-center gap-2 px-4 sm:gap-4 sm:px-6">
+                {/* LOGO */}
 
-          <SearchBox />
-        </div>
+                <Link
+                    href="/"
+                    className="shrink-0 font-display text-xl tracking-tight text-primary transition-opacity hover:opacity-80"
+                >
+                    Cinephile
+                </Link>
 
-        {/* Desktop navigation */}
-        {username && (
-          <div className="hidden items-center gap-4 sm:flex">
-            <Link
-              href="/watchlist"
-              className="text-sm"
-            >
-              Watchlist
-            </Link>
+                {/* DESKTOP SEARCH */}
 
-            <Link
-              href="/watched"
-              className="text-sm"
-            >
-              Watched
-            </Link>
+                <div className="hidden min-w-0 flex-1 sm:block sm:max-w-xs lg:max-w-sm">
+                    <SearchBox />
+                </div>
 
-            <Link
-              href="/ratings"
-              className="text-sm"
-            >
-              Ratings
-            </Link>
+                {/* DESKTOP NAV */}
 
-            <Link
-              href="/lists"
-              className="text-sm"
-            >
-              Lists
-            </Link>
+                {profile && (
+                    <div className="hidden items-center gap-1 lg:flex">
+                        <NavLink href="/discover">
+                            Discover
+                        </NavLink>
 
-            <Link
-              href="/discover"
-              className="text-sm"
-            >
-              Discover
-            </Link>
+                        <NavLink href="/people/browse">
+                            People
+                        </NavLink>
 
-            <Link
-              href="/friends"
-              className="text-sm"
-            >
-              Friends
-            </Link>
+                        <NavLink href="/lists">
+                            Lists
+                        </NavLink>
 
-            <Link
-              href="/activity"
-              className="text-sm"
-            >
-              Activity
-            </Link>
-          </div>
-        )}
-
-        {/* Mobile navigation */}
-        <div className="flex items-center gap-3">
-          <Sheet>
-            <SheetTrigger
-              className="sm:hidden inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-muted"
-              aria-label="Open menu"
-            >
-              <Menu className="h-5 w-5" />
-            </SheetTrigger>
-
-            <SheetContent side="right" className="bg-card">
-              <nav className="mt-8 flex flex-col gap-4 text-sm">
-                <Link href="/discover">Discover</Link>
-                <Link href="/lists">Lists</Link>
-
-                {username && (
-                  <>
-                    <Link href="/watchlist">Watchlist</Link>
-                    <Link href="/watched">Watched</Link>
-                    <Link href="/ratings">Ratings</Link>
-                    <Link href="/friends">Friends</Link>
-                    <Link href="/activity">Activity</Link>
-                  </>
+                        <NavLink href="/friends">
+                            Friends
+                        </NavLink>
+                    </div>
                 )}
-              </nav>
-            </SheetContent>
-          </Sheet>
 
-          {/* Auth state */}
-          <div className="flex items-center gap-4">
-            {username ? (
-              <>
-                <span className="hidden text-sm text-muted-foreground sm:inline">
-                  Logged in as {username}
-                </span>
+                {/* RIGHT SIDE */}
 
-                <form action={logoutAction}>
-                  <Button
-                    type="submit"
-                    variant="outline"
-                    size="sm"
-                  >
-                    Logout
-                  </Button>
-                </form>
-              </>
-            ) : (
-              <>
-                <Link href="/login">
-                  <Button variant="ghost" size="sm">
-                    Login
-                  </Button>
-                </Link>
+                <div className="ml-auto flex items-center gap-2">
+                    {/* ADD MOVIE */}
 
-                <Link href="/register">
-                  <Button size="sm">Register</Button>
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </nav>
-  );
+                    {profile && (
+                        <Link
+                            href="/add"
+                            className="hidden items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted sm:flex"
+                        >
+                            <Plus className="h-4 w-4" />
+
+                            <span className="hidden xl:inline">
+                                Add Movie
+                            </span>
+                        </Link>
+                    )}
+
+                    {/* MOBILE MENU */}
+
+                    <MobileNav
+                        loggedIn={!!profile}
+                        username={profile?.username}
+                        avatarUrl={profile?.avatarUrl}
+                    />
+
+                    {/* DESKTOP ACCOUNT */}
+
+                    {profile ? (
+                        <div className="hidden items-center gap-3 lg:flex">
+                            <NavLink
+                                href="/profile"
+                                exact
+                                className="flex items-center gap-2 !px-2 !py-1.5"
+                            >
+                                <Avatar className="h-8 w-8">
+                                    <AvatarImage
+                                        src={
+                                            profile.avatarUrl ??
+                                            undefined
+                                        }
+                                        alt={profile.username}
+                                    />
+
+                                    <AvatarFallback>
+                                        {profile.username
+                                            .charAt(0)
+                                            .toUpperCase()}
+                                    </AvatarFallback>
+                                </Avatar>
+
+                                <span className="max-w-[120px] truncate text-sm font-medium">
+                                    {profile.username}
+                                </span>
+                            </NavLink>
+
+                            <form action={logoutAction}>
+                                <Button
+                                    type="submit"
+                                    variant="outline"
+                                    size="sm"
+                                >
+                                    Logout
+                                </Button>
+                            </form>
+                        </div>
+                    ) : (
+                        <div className="hidden items-center gap-2 sm:flex">
+                            <Link href="/login">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                >
+                                    Log in
+                                </Button>
+                            </Link>
+
+                            <Link href="/register">
+                                <Button size="sm">
+                                    Register
+                                </Button>
+                            </Link>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </nav>
+    );
 }

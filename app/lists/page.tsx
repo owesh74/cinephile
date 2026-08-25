@@ -16,7 +16,7 @@ export default async function ListsPage() {
   } = await supabase.auth.getUser();
 
   return (
-    <div className="mx-auto max-w-3xl space-y-10 py-12">
+    <div className="mx-auto w-full max-w-... space-y-... px-4 py-8 sm:px-6 sm:py-12">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Lists</h1>
 

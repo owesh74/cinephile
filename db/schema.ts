@@ -57,6 +57,44 @@ export const people = pgTable("people", {
   photoUrl: text("photo_url"),
 });
 
+export const likedPeople = pgTable(
+  "liked_people",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+
+    personId: uuid("person_id")
+      .notNull()
+      .references(() => people.id, { onDelete: "cascade" }),
+
+    createdAt: timestamp("created_at", {
+      withTimezone: true,
+    })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    primaryKey({
+      columns: [t.userId, t.personId],
+    }),
+  ]
+);
+
+export const likedPeopleRelations = relations(
+  likedPeople,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [likedPeople.userId],
+      references: [users.id],
+    }),
+
+    person: one(people, {
+      fields: [likedPeople.personId],
+      references: [people.id],
+    }),
+  })
+);
 // ── Join tables ──────────────────────────────────────────
 
 export const movieGenres = pgTable(
@@ -203,3 +241,4 @@ export const userAchievements = pgTable(
   },
   (t) => [primaryKey({ columns: [t.userId, t.achievementId] })]
 );
+

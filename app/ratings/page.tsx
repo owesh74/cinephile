@@ -21,9 +21,9 @@ export default async function RatingsPage() {
     .orderBy(desc(ratings.ratedAt));
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 py-12">
+    <div className="mx-auto w-full max-w-... space-y-... px-4 py-8 sm:px-6 sm:py-12">
       <h1 className="text-2xl font-semibold">Your Ratings</h1>
-
+<div className="h-4" />
       {items.length === 0 ? (
         <div className="rounded-md border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
           You haven't rated anything yet.
