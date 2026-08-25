@@ -21,6 +21,7 @@ export async function toggleWatchlistAction(
   const user = await requireUser();
 
   if (currentlyOn) {
+    // Remove from watchlist
     await db
       .delete(watchlist)
       .where(
@@ -30,6 +31,17 @@ export async function toggleWatchlistAction(
         )
       );
   } else {
+    // A movie cannot be both watched and on the watchlist.
+    await db
+      .delete(watched)
+      .where(
+        and(
+          eq(watched.userId, user.id),
+          eq(watched.movieId, movieId)
+        )
+      );
+
+    // Add to watchlist
     await db
       .insert(watchlist)
       .values({ userId: user.id, movieId })
@@ -44,6 +56,7 @@ export async function toggleWatchlistAction(
 
   revalidatePath(`/movie/${movieId}`);
   revalidatePath("/watchlist");
+  revalidatePath("/watched");
   revalidatePath("/activity");
 }
 
@@ -54,6 +67,7 @@ export async function toggleWatchedAction(
   const user = await requireUser();
 
   if (currentlyOn) {
+    // Remove from watched
     await db
       .delete(watched)
       .where(
@@ -63,6 +77,17 @@ export async function toggleWatchedAction(
         )
       );
   } else {
+    // A watched movie cannot remain on the watchlist.
+    await db
+      .delete(watchlist)
+      .where(
+        and(
+          eq(watchlist.userId, user.id),
+          eq(watchlist.movieId, movieId)
+        )
+      );
+
+    // Add to watched
     await db
       .insert(watched)
       .values({ userId: user.id, movieId })
@@ -80,8 +105,11 @@ export async function toggleWatchedAction(
 
   revalidatePath(`/movie/${movieId}`);
   revalidatePath("/watched");
+  revalidatePath("/watchlist");
   revalidatePath("/activity");
 }
+
+
 
 async function checkAndEmitListCompletions(
   userId: string,
