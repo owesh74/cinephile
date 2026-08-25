@@ -131,7 +131,7 @@ export function FriendActionButton({
                     disabled={pending}
                 >
                     {pending
-                        ? "Cancelling..."
+                        ? "Processing..."
                         : "Request sent — Cancel"}
                 </Button>
             )}
