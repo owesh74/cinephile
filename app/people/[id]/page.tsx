@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-
+import { LikePersonButton } from "@/components/like-person-button";
 import { db } from "@/db";
 
 import {
@@ -217,28 +217,16 @@ export default async function PersonPage({
 
                         {/* LIKE */}
 
+                        {/* LIKE */}
                         {loggedIn ? (
-                            <form
+                            <LikePersonButton
                                 action={handleLikePerson}
-                                className="mt-5"
-                            >
-                                <button
-                                    type="submit"
-                                    className={`rounded-full border px-5 py-2 text-sm font-medium transition ${
-                                        isLiked
-                                            ? "border-primary bg-primary text-primary-foreground"
-                                            : "border-border hover:bg-muted"
-                                    }`}
-                                >
-                                    {isLiked
-                                        ? "♥ Liked"
-                                        : "♡ Like person"}
-                                </button>
-                            </form>
+                                isLiked={isLiked}
+                            />
                         ) : (
                             <Link
                                 href="/login"
-                                className="mt-5 inline-block rounded-full border border-border px-5 py-2 text-sm font-medium hover:bg-muted"
+                                className="mt-5 inline-block rounded-full border border-border px-5 py-2 text-sm font-medium transition hover:bg-muted"
                             >
                                 Log in to like
                             </Link>
