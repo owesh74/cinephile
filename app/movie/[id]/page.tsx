@@ -226,10 +226,9 @@ export default async function MoviePage({
                                 <p className="text-xs text-muted-foreground">
                                     Cinephile Score{" "}
                                     {ratingCount > 0 &&
-                                        `(${ratingCount} rating${
-                                            ratingCount === 1
-                                                ? ""
-                                                : "s"
+                                        `(${ratingCount} rating${ratingCount === 1
+                                            ? ""
+                                            : "s"
                                         })`}
                                 </p>
                             </div>
@@ -248,70 +247,104 @@ export default async function MoviePage({
             </div>
 
             {/* Director / Writers */}
-            {(movie.directors.length > 0 ||
-                movie.writers.length > 0) && (
-                <div className="flex flex-wrap gap-8 text-sm">
-
+            {(movie.directors.length > 0 || movie.writers.length > 0) && (
+                <div className="space-y-6">
                     {movie.directors.length > 0 && (
                         <div>
-                            <p className="font-medium">
-                                Director
-                            </p>
+                            <p className="mb-3 text-lg font-medium">Director</p>
 
-                            <p className="text-muted-foreground">
-                                {movie.directors
-                                    .map((director) => director.name)
-                                    .join(", ")}
-                            </p>
+                            <div className="flex flex-wrap gap-4">
+                                {movie.directors.map((person) => (
+                                    <div
+                                        key={person.personId}
+                                        className="w-24 text-center text-xs"
+                                    >
+                                        <div className="mb-2 h-24 w-24 overflow-hidden rounded-full bg-muted">
+                                            {person.photoUrl ? (
+                                                <img
+                                                    src={person.photoUrl}
+                                                    alt={person.name}
+                                                    className="h-full w-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center text-2xl font-semibold text-muted-foreground">
+                                                    {person.name
+                                                        .charAt(0)
+                                                        .toUpperCase()}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <p className="font-medium">{person.name}</p>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
 
                     {movie.writers.length > 0 && (
                         <div>
-                            <p className="font-medium">
-                                Writers
-                            </p>
+                            <p className="mb-3 text-lg font-medium">Writers</p>
 
-                            <p className="text-muted-foreground">
-                                {movie.writers
-                                    .map((writer) => writer.name)
-                                    .join(", ")}
-                            </p>
+                            <div className="flex flex-wrap gap-4">
+                                {movie.writers.map((person) => (
+                                    <div
+                                        key={person.personId}
+                                        className="w-24 text-center text-xs"
+                                    >
+                                        <div className="mb-2 h-24 w-24 overflow-hidden rounded-full bg-muted">
+                                            {person.photoUrl ? (
+                                                <img
+                                                    src={person.photoUrl}
+                                                    alt={person.name}
+                                                    className="h-full w-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center text-2xl font-semibold text-muted-foreground">
+                                                    {person.name
+                                                        .charAt(0)
+                                                        .toUpperCase()}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <p className="font-medium">{person.name}</p>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
-
                 </div>
             )}
 
             {/* Cast */}
             {movie.cast.length > 0 && (
                 <div>
-                    <h2 className="mb-3 text-lg font-medium">
-                        Cast
-                    </h2>
+                    <h2 className="mb-3 text-lg font-medium">Cast</h2>
 
                     <div className="flex flex-wrap gap-4">
-
                         {movie.cast.map((person) => (
                             <div
                                 key={person.personId}
                                 className="w-24 text-center text-xs"
                             >
-                                <div className="mb-1 h-24 w-24 overflow-hidden rounded-full bg-muted">
-
+                                <div className="mb-2 h-24 w-24 overflow-hidden rounded-full bg-muted">
                                     {person.photoUrl ? (
                                         <img
                                             src={person.photoUrl}
                                             alt={person.name}
                                             className="h-full w-full object-cover"
                                         />
-                                    ) : null}
-
+                                    ) : (
+                                        <div className="flex h-full w-full items-center justify-center text-2xl font-semibold text-muted-foreground">
+                                            {person.name
+                                                .charAt(0)
+                                                .toUpperCase()}
+                                        </div>
+                                    )}
                                 </div>
 
-                                <p className="font-medium">
-                                    {person.name}
-                                </p>
+                                <p className="font-medium">{person.name}</p>
 
                                 {person.characterName && (
                                     <p className="text-muted-foreground">
@@ -320,7 +353,6 @@ export default async function MoviePage({
                                 )}
                             </div>
                         ))}
-
                     </div>
                 </div>
             )}

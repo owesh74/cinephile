@@ -1,26 +1,32 @@
 "use client";
 
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 export function SearchBox() {
   const router = useRouter();
   const [value, setValue] = useState("");
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter" && value.trim()) {
-      router.push(`/search?q=${encodeURIComponent(value.trim())}`);
-    }
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    const query = value.trim();
+
+    if (!query) return;
+
+    router.push(`/search?q=${encodeURIComponent(query)}`);
   }
 
   return (
-    <input
-      type="text"
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
-      onKeyDown={handleKeyDown}
-      placeholder="Search..."
-      className="w-64 rounded-md border bg-transparent px-3 py-1.5 text-sm"
-    />
+    <form onSubmit={handleSubmit}>
+      <input
+        type="search"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="Search movies..."
+        aria-label="Search movies"
+        className="w-64 rounded-md border border-border bg-transparent px-3 py-1.5 text-sm outline-none transition focus:border-primary"
+      />
+    </form>
   );
 }
