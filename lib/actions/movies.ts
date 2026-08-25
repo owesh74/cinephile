@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/require-user";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { db } from "@/db";
 import {
   movies,
@@ -14,8 +15,30 @@ import {
   movieCountries,
   movieCast,
 } from "@/db/schema";
-import { ilike } from "drizzle-orm";
+import { ilike, eq } from "drizzle-orm";
 import { createMovieSchema } from "@/lib/validations/movie";
+
+async function getStorageClient() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+  if (serviceRoleKey && supabaseUrl) {
+    return createSupabaseAdminClient(
+      supabaseUrl,
+      serviceRoleKey,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
+  }
+
+  // Fallback to the authenticated server client.
+  // If Storage RLS blocks the upload, the returned error will tell us exactly why.
+  return createClient();
+}
 
 export async function searchExistingMovies(query: string) {
   if (!query.trim()) return [];
@@ -120,24 +143,58 @@ export async function createMovieAction(formData: FormData) {
       return { error: "Poster image must be under 5MB" };
     }
 
-    const supabase = await createClient();
+    if (!posterFile.type.startsWith("image/")) {
+      return { error: "Poster file must be an image" };
+    }
 
-    const ext = posterFile.name.split(".").pop();
+    const supabase = await getStorageClient();
+
+    const ext =
+      posterFile.name.split(".").pop()?.toLowerCase() || "jpg";
+
     const path = `${crypto.randomUUID()}.${ext}`;
+
+    const arrayBuffer = await posterFile.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    console.log("POSTER CREATE - uploading:", {
+      name: posterFile.name,
+      type: posterFile.type,
+      size: posterFile.size,
+      path,
+    });
 
     const { error: uploadError } = await supabase.storage
       .from("posters")
-      .upload(path, posterFile);
+      .upload(path, buffer, {
+        contentType: posterFile.type,
+        upsert: false,
+      });
 
     if (uploadError) {
-      return { error: uploadError.message };
+      console.error("POSTER CREATE - upload failed:", uploadError);
+
+      return {
+        error: `Poster upload failed: ${uploadError.message}`,
+      };
     }
 
     const {
       data: { publicUrl },
     } = supabase.storage.from("posters").getPublicUrl(path);
 
+    if (!publicUrl) {
+      return {
+        error: "Poster uploaded but Supabase did not return a public URL",
+      };
+    }
+
     posterUrl = publicUrl;
+
+    console.log("POSTER CREATE - uploaded successfully:", {
+      path,
+      posterUrl,
+    });
   }
 
   const [movie] = await db
@@ -158,7 +215,6 @@ export async function createMovieAction(formData: FormData) {
     })
     .returning();
 
-  // Genres
   if (data.genres) {
     const genreNames = data.genres
       .split(",")
@@ -178,7 +234,6 @@ export async function createMovieAction(formData: FormData) {
     }
   }
 
-  // Countries
   if (data.countries) {
     const countryNames = data.countries
       .split(",")
@@ -198,7 +253,6 @@ export async function createMovieAction(formData: FormData) {
     }
   }
 
-  // Director
   if (data.director) {
     const personId = await findOrCreatePerson(data.director);
 
@@ -212,7 +266,6 @@ export async function createMovieAction(formData: FormData) {
       .onConflictDoNothing();
   }
 
-  // Writers
   if (data.writers) {
     const writerNames = data.writers
       .split(",")
@@ -233,7 +286,6 @@ export async function createMovieAction(formData: FormData) {
     }
   }
 
-  // Cast
   if (data.cast) {
     const castEntries = data.cast
       .split(",")
@@ -263,6 +315,10 @@ export async function createMovieAction(formData: FormData) {
         .onConflictDoNothing();
     }
   }
+
+  revalidatePath(`/movie/${movie.id}`);
+  revalidatePath("/discover");
+  revalidatePath("/");
 
   redirect(`/movie/${movie.id}`);
 }
@@ -309,29 +365,53 @@ export async function updateMovieAction(
   });
 
   if (duplicate && duplicate.id !== movieId) {
-    return { error: "A movie with this title already exists" };
+    return {
+      error: "A movie with this title already exists",
+    };
   }
 
-  // Poster
+  // Keep the existing poster unless a new one was uploaded.
   let posterUrl = existingMovie.posterUrl;
 
   const posterFile = formData.get("poster") as File | null;
 
+  console.log("MOVIE UPDATE - poster received:", {
+    movieId,
+    hasFile: !!posterFile,
+    name: posterFile?.name,
+    type: posterFile?.type,
+    size: posterFile?.size,
+  });
+
   if (posterFile && posterFile.size > 0) {
     if (posterFile.size > 5 * 1024 * 1024) {
-      return { error: "Poster image must be under 5MB" };
+      return {
+        error: "Poster image must be under 5MB",
+      };
     }
-
-    const supabase = await createClient();
 
     if (!posterFile.type.startsWith("image/")) {
-      return { error: "Poster file must be an image" };
+      return {
+        error: "Poster file must be an image",
+      };
     }
 
-    const ext = posterFile.name.split(".").pop()?.toLowerCase() || "jpg";
+    const supabase = await getStorageClient();
+
+    const ext =
+      posterFile.name.split(".").pop()?.toLowerCase() || "jpg";
+
     const path = `${crypto.randomUUID()}.${ext}`;
+
     const arrayBuffer = await posterFile.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+
+    console.log("MOVIE UPDATE - uploading poster:", {
+      movieId,
+      path,
+      type: posterFile.type,
+      size: posterFile.size,
+    });
 
     const { error: uploadError } = await supabase.storage
       .from("posters")
@@ -341,25 +421,48 @@ export async function updateMovieAction(
       });
 
     if (uploadError) {
-      return { error: uploadError.message };
+      console.error(
+        "MOVIE UPDATE - Supabase poster upload FAILED:",
+        uploadError
+      );
+
+      return {
+        error: `Poster upload failed: ${uploadError.message}`,
+      };
     }
 
     const {
       data: { publicUrl },
-    } = supabase.storage.from("posters").getPublicUrl(path);
+    } = supabase.storage
+      .from("posters")
+      .getPublicUrl(path);
+
+    if (!publicUrl) {
+      console.error(
+        "MOVIE UPDATE - upload succeeded but no public URL was returned"
+      );
+
+      return {
+        error:
+          "Poster uploaded, but Supabase did not return a public URL",
+      };
+    }
 
     posterUrl = publicUrl;
 
-    console.log("POSTER UPLOADED:", {
+    console.log("MOVIE UPDATE - poster uploaded successfully:", {
+      movieId,
       path,
       posterUrl,
-      size: posterFile.size,
-      type: posterFile.type,
     });
   }
 
-  // Update movie
-  await db
+  console.log("MOVIE UPDATE - saving movie:", {
+    movieId,
+    posterUrl,
+  });
+
+  const updatedMovies = await db
     .update(movies)
     .set({
       title: data.title,
@@ -375,12 +478,46 @@ export async function updateMovieAction(
       language: data.language || null,
       imdbScore: data.imdbScore || null,
     })
-    .where((m, { eq }) => eq(m.id, movieId));
+    .where(eq(movies.id, movieId))
+    .returning({
+      id: movies.id,
+      posterUrl: movies.posterUrl,
+    });
+
+  if (updatedMovies.length === 0) {
+    console.error(
+      "MOVIE UPDATE - database update returned no rows:",
+      movieId
+    );
+
+    return {
+      error: "Movie update failed: no database row was updated",
+    };
+  }
+
+  const updatedMovie = updatedMovies[0];
+
+  console.log("MOVIE UPDATE - database result:", {
+    movieId: updatedMovie.id,
+    posterUrl: updatedMovie.posterUrl,
+  });
+
+  if (posterUrl !== updatedMovie.posterUrl) {
+    console.error("MOVIE UPDATE - poster URL mismatch:", {
+      expected: posterUrl,
+      actual: updatedMovie.posterUrl,
+    });
+
+    return {
+      error:
+        "Movie was updated, but the poster URL was not saved correctly",
+    };
+  }
 
   // Replace genres
   await db
     .delete(movieGenres)
-    .where((mg, { eq }) => eq(mg.movieId, movieId));
+    .where(eq(movieGenres.movieId, movieId));
 
   if (data.genres) {
     const genreNames = data.genres
@@ -404,7 +541,7 @@ export async function updateMovieAction(
   // Replace countries
   await db
     .delete(movieCountries)
-    .where((mc, { eq }) => eq(mc.movieId, movieId));
+    .where(eq(movieCountries.movieId, movieId));
 
   if (data.countries) {
     const countryNames = data.countries
@@ -428,7 +565,7 @@ export async function updateMovieAction(
   // Replace director, writers, and cast
   await db
     .delete(movieCast)
-    .where((mc, { eq }) => eq(mc.movieId, movieId));
+    .where(eq(movieCast.movieId, movieId));
 
   // Director
   if (data.director) {
@@ -500,7 +637,10 @@ export async function updateMovieAction(
   revalidatePath("/discover");
   revalidatePath("/");
 
+  console.log("MOVIE UPDATE - completed successfully:", {
+    movieId,
+    posterUrl,
+  });
+
   redirect(`/movie/${movieId}`);
 }
-
-
