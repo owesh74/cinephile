@@ -22,6 +22,7 @@ export default async function RatingsPage() {
 
   return (
     <div className="mx-auto w-full max-w-... space-y-... px-4 py-8 sm:px-6 sm:py-12">
+      
       <h1 className="text-2xl font-semibold">Your Ratings</h1>
 <div className="h-4" />
       {items.length === 0 ? (

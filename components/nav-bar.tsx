@@ -51,7 +51,7 @@ export async function NavBar() {
                     href="/"
                     className="shrink-0 font-display text-xl tracking-tight text-primary transition-opacity hover:opacity-80"
                 >
-                    Cinephile
+                    Onyx
                 </Link>
 
                 {/* DESKTOP SEARCH */}

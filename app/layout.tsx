@@ -6,6 +6,7 @@ import {
 } from "next/font/google";
 import { NavBar } from "@/components/nav-bar";
 import "./globals.css";
+import { MadeByFooter } from "@/components/made-by-footer";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -40,8 +41,13 @@ export default function RootLayout({
       <body
         className={`${fraunces.variable} ${inter.variable} ${plexMono.variable} font-body`}
       >
-        <NavBar />
-        {children}
+         <NavBar />
+
+                <main className="min-h-[calc(100vh-4rem)]">
+                    {children}
+                </main>
+
+                <MadeByFooter />
       </body>
     </html>
   );
