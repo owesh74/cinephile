@@ -17,14 +17,18 @@ import {
     MovieHeroSlider,
     type SlideMovie,
 } from "@/components/movie-hero-slider";
+
 import { TrendingRow } from "@/components/trending-row";
+
 import {
     TopRatedList,
     UpcomingList,
 } from "@/components/movie-lists";
+
 import { HomeSidebar } from "@/components/home-sidebar";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { SearchBox } from "@/components/search-box";
+
 import { FEATURED_MOVIES } from "@/lib/featured-movies";
 
 import { Button } from "@/components/ui/button";
@@ -47,24 +51,37 @@ export default async function HomePage() {
      * HERO
      *
      * Use real movies from the database.
-     * No hardcoded/fake featured movie data.
+     * Featured movie configuration only controls
+     * the hero image / trailer / badge.
      */
-    const featuredIds = FEATURED_MOVIES.map((item) => item.movieId);
 
-   const featuredMovies = featuredIds.length
-    ? await db.query.movies.findMany({
-          where: (movies) =>
-              inArray(movies.id, featuredIds),
-      })
-    : [];
+    const featuredIds = FEATURED_MOVIES.map(
+        (item) => item.movieId
+    );
+
+    const featuredMovies =
+        featuredIds.length
+            ? await db.query.movies.findMany({
+                where: (movies) =>
+                    inArray(movies.id, featuredIds),
+            })
+            : [];
 
     const heroSourceMovies =
         featuredIds.length > 0
             ? featuredIds
                 .map((id) =>
-                    featuredMovies.find((movie) => movie.id === id)
+                    featuredMovies.find(
+                        (movie) => movie.id === id
+                    )
                 )
-                .filter((movie): movie is NonNullable<typeof movie> => !!movie)
+                .filter(
+                    (
+                        movie
+                    ): movie is NonNullable<
+                        typeof movie
+                    > => !!movie
+                )
             : popular.slice(0, 5);
 
     const heroImages = Object.fromEntries(
@@ -89,37 +106,49 @@ export default async function HomePage() {
         ] as const)
     );
 
-    const heroGenresByMovie = Object.fromEntries(heroGenreEntries);
+    const heroGenresByMovie =
+        Object.fromEntries(heroGenreEntries);
 
     const heroStatusByMovie = user
         ? Object.fromEntries(
             await Promise.all(
-                heroSourceMovies.map(async (movie) => [
-                    movie.id,
-                    await getUserMovieStatus(user.id, movie.id),
-                ] as const)
+                heroSourceMovies.map(
+                    async (movie) => [
+                        movie.id,
+                        await getUserMovieStatus(
+                            user.id,
+                            movie.id
+                        ),
+                    ] as const
+                )
             )
         )
         : {};
 
-    const slides: SlideMovie[] = heroSourceMovies.map((movie) => {
-        const featured = FEATURED_MOVIES.find(
-            (item) => item.movieId === movie.id
-        );
+    const slides: SlideMovie[] =
+        heroSourceMovies.map((movie) => {
+            const featured = FEATURED_MOVIES.find(
+                (item) => item.movieId === movie.id
+            );
 
-        return {
-            id: movie.id,
-            title: movie.title,
-            image: featured?.image ?? movie.backdropUrl ?? movie.posterUrl,
-            releaseDate: movie.releaseDate,
-            runtimeMinutes: movie.runtimeMinutes,
-            imdbScore: movie.imdbScore,
-            description: movie.description,
-            genres: heroGenresByMovie[movie.id] ?? [],
-            trailerUrl: featured?.trailerUrl,
-            badge: featured?.badge,
-        };
-    });
+            return {
+                id: movie.id,
+                title: movie.title,
+                image:
+                    featured?.image ??
+                    movie.backdropUrl ??
+                    movie.posterUrl,
+                releaseDate: movie.releaseDate,
+                runtimeMinutes:
+                    movie.runtimeMinutes,
+                imdbScore: movie.imdbScore,
+                description: movie.description,
+                genres:
+                    heroGenresByMovie[movie.id] ?? [],
+                trailerUrl: featured?.trailerUrl,
+                badge: featured?.badge,
+            };
+        });
 
     const heroIds = new Set(
         heroSourceMovies.map((movie) => movie.id)
@@ -132,18 +161,29 @@ export default async function HomePage() {
     /*
      * LOGGED OUT
      */
+
     if (!user) {
         return (
             <main className="min-h-[calc(100vh-4rem)] pb-16 lg:pb-0">
                 <div className="mx-auto flex max-w-[1600px] gap-8 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
+
+                    {/* DESKTOP SIDEBAR */}
+
                     <aside className="hidden w-56 shrink-0 lg:block">
                         <HomeSidebar loggedIn={false} />
                     </aside>
 
+                    {/* MAIN CONTENT */}
+
                     <div className="min-w-0 flex-1 space-y-10">
+
+                        {/* MOBILE SEARCH */}
+
                         <div className="lg:hidden">
                             <SearchBox />
                         </div>
+
+                        {/* HERO */}
 
                         <MovieHeroSlider
                             slides={slides}
@@ -151,7 +191,11 @@ export default async function HomePage() {
                             statusByMovie={heroStatusByMovie}
                         />
 
+                        {/* MOBILE CATEGORY BUTTONS */}
+
                         <MobileCategoryPills />
+
+                        {/* TRENDING */}
 
                         {trending.length > 0 && (
                             <SectionBlock
@@ -160,9 +204,13 @@ export default async function HomePage() {
                                 title="Trending Now"
                                 href="/discover"
                             >
-                                <TrendingRow movies={trending} />
+                                <TrendingRow
+                                    movies={trending}
+                                />
                             </SectionBlock>
                         )}
+
+                        {/* TOP RATED */}
 
                         {topRated.length > 0 && (
                             <SectionBlock
@@ -171,9 +219,30 @@ export default async function HomePage() {
                                 title="Top Rated"
                                 href="/discover"
                             >
-                                <TopRatedList movies={topRated} />
+                                <TopRatedList
+                                    movies={topRated}
+                                />
                             </SectionBlock>
                         )}
+
+                        {/* UPCOMING */}
+
+                        <SectionBlock
+                            id="upcoming"
+                            eyebrow="Coming soon"
+                            title="Upcoming"
+                            href="/discover"
+                        >
+                            {upcoming.length > 0 ? (
+                                <UpcomingList movies={upcoming} />
+                            ) : (
+                                <p className="rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+                                    Nothing upcoming yet.
+                                </p>
+                            )}
+                        </SectionBlock>
+
+                        {/* FEATURE CARDS */}
 
                         <section className="grid gap-4 sm:grid-cols-3">
                             <FeatureCard
@@ -192,6 +261,8 @@ export default async function HomePage() {
                             />
                         </section>
 
+                        {/* JOIN SECTION */}
+
                         <section className="rounded-2xl border border-border bg-card p-8 text-center sm:p-12">
                             <p className="text-xs font-medium uppercase tracking-wider text-primary">
                                 Join Cinephile
@@ -202,13 +273,17 @@ export default async function HomePage() {
                             </h2>
 
                             <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">
-                                Create an account to build a watchlist, rate what
-                                you've watched, and compare taste with friends.
+                                Create an account to build a watchlist,
+                                rate what you've watched, and compare
+                                taste with friends.
                             </p>
 
                             <div className="mt-6 flex justify-center gap-3">
                                 <Link href="/register">
-                                    <Button size="lg" className="px-6">
+                                    <Button
+                                        size="lg"
+                                        className="px-6"
+                                    >
                                         Get started
                                     </Button>
                                 </Link>
@@ -226,28 +301,37 @@ export default async function HomePage() {
                         </section>
                     </div>
 
+                    {/* RIGHT SIDEBAR */}
+
                     <aside className="hidden w-72 shrink-0 space-y-8 xl:block">
+
                         {topRated.length > 0 && (
                             <RightPanel
                                 title="Top Rated"
                                 href="/discover"
                             >
-                                <TopRatedList movies={topRated} />
+                                <TopRatedList
+                                    movies={topRated}
+                                />
                             </RightPanel>
                         )}
 
                         {upcoming.length > 0 && (
                             <RightPanel
                                 title="Most Anticipated"
-                                href="/discover"
+                                href="#upcoming"
                             >
-                                <UpcomingList movies={upcoming} />
+                                <UpcomingList
+                                    movies={upcoming}
+                                />
                             </RightPanel>
                         )}
                     </aside>
                 </div>
 
-                {/* <MobileBottomNav loggedIn={false} /> */}
+                {/* MOBILE BOTTOM NAV */}
+
+                <MobileBottomNav loggedIn={false} />
             </main>
         );
     }
@@ -255,26 +339,38 @@ export default async function HomePage() {
     /*
      * LOGGED IN
      */
+
     const profile = await db.query.users.findFirst({
         where: eq(users.id, user.id),
     });
 
-    const continueWatching = await getContinueWatching(
-        user.id,
-        8
-    );
+    const continueWatching =
+        await getContinueWatching(
+            user.id,
+            8
+        );
 
     return (
         <main className="min-h-[calc(100vh-4rem)] pb-16 lg:pb-0">
             <div className="mx-auto flex max-w-[1600px] gap-8 px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
+
+                {/* DESKTOP SIDEBAR */}
+
                 <aside className="hidden w-56 shrink-0 lg:block">
                     <HomeSidebar loggedIn={true} />
                 </aside>
 
+                {/* MAIN CONTENT */}
+
                 <div className="min-w-0 flex-1 space-y-10">
+
+                    {/* MOBILE SEARCH */}
+
                     <div className="lg:hidden">
                         <SearchBox />
                     </div>
+
+                    {/* HERO */}
 
                     <MovieHeroSlider
                         slides={slides}
@@ -282,7 +378,11 @@ export default async function HomePage() {
                         statusByMovie={heroStatusByMovie}
                     />
 
+                    {/* MOBILE CATEGORY BUTTONS */}
+
                     <MobileCategoryPills />
+
+                    {/* WELCOME */}
 
                     <section>
                         <div className="mb-4">
@@ -298,6 +398,7 @@ export default async function HomePage() {
                         </div>
 
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+
                             <QuickAction
                                 href="/watchlist"
                                 title="Watchlist"
@@ -324,6 +425,8 @@ export default async function HomePage() {
                         </div>
                     </section>
 
+                    {/* CONTINUE WATCHING */}
+
                     <SectionBlock
                         id="continue-watching"
                         eyebrow="Pick up where you left off"
@@ -331,11 +434,15 @@ export default async function HomePage() {
                         href="/watchlist"
                     >
                         {continueWatching.length > 0 ? (
-                            <MoviePosterGrid movies={continueWatching} />
+                            <MoviePosterGrid
+                                movies={continueWatching}
+                            />
                         ) : (
                             <EmptyMovieSection />
                         )}
                     </SectionBlock>
+
+                    {/* TRENDING */}
 
                     {trending.length > 0 && (
                         <SectionBlock
@@ -344,9 +451,13 @@ export default async function HomePage() {
                             title="Trending Now"
                             href="/discover"
                         >
-                            <TrendingRow movies={trending} />
+                            <TrendingRow
+                                movies={trending}
+                            />
                         </SectionBlock>
                     )}
+
+                    {/* TOP RATED */}
 
                     {topRated.length > 0 && (
                         <SectionBlock
@@ -355,9 +466,29 @@ export default async function HomePage() {
                             title="Top Rated"
                             href="/discover"
                         >
-                            <TopRatedList movies={topRated} />
+                            <TopRatedList
+                                movies={topRated}
+                            />
                         </SectionBlock>
                     )}
+
+                    {/* UPCOMING */}
+
+                    <SectionBlock
+                        id="upcoming"
+                        eyebrow="Coming soon"
+                        title="Upcoming"
+                        href="/discover"
+                    >
+                        {upcoming.length > 0 ? (
+                            <UpcomingList movies={upcoming} />
+                        ) : (
+                            <p className="rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+                                Nothing upcoming yet.
+                            </p>
+                        )}
+                    </SectionBlock>
+                    {/* EXPLORE SECTION */}
 
                     <section className="rounded-2xl border border-border bg-card p-8 text-center sm:p-12">
                         <p className="text-xs font-medium uppercase tracking-wider text-primary">
@@ -369,13 +500,15 @@ export default async function HomePage() {
                         </h2>
 
                         <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">
-                            Browse the Cinephile catalog and discover movies
-                            worth adding to your watchlist.
+                            Browse the Cinephile catalog and discover
+                            movies worth adding to your watchlist.
                         </p>
 
                         <div className="mt-6 flex justify-center gap-3">
                             <Link href="/discover">
-                                <Button>Explore Discover</Button>
+                                <Button>
+                                    Explore Discover
+                                </Button>
                             </Link>
 
                             <Link href="/lists">
@@ -387,28 +520,37 @@ export default async function HomePage() {
                     </section>
                 </div>
 
+                {/* RIGHT SIDEBAR */}
+
                 <aside className="hidden w-72 shrink-0 space-y-8 xl:block">
+
                     {topRated.length > 0 && (
                         <RightPanel
                             title="Top Rated"
                             href="/discover"
                         >
-                            <TopRatedList movies={topRated} />
+                            <TopRatedList
+                                movies={topRated}
+                            />
                         </RightPanel>
                     )}
 
                     {upcoming.length > 0 && (
                         <RightPanel
                             title="Most Anticipated"
-                            href="/discover"
+                            href="#upcoming"
                         >
-                            <UpcomingList movies={upcoming} />
+                            <UpcomingList
+                                movies={upcoming}
+                            />
                         </RightPanel>
                     )}
                 </aside>
             </div>
 
-            {/* <MobileBottomNav loggedIn={true} /> */}
+            {/* MOBILE BOTTOM NAV */}
+
+            <MobileBottomNav loggedIn={true} />
         </main>
     );
 }
@@ -431,7 +573,10 @@ function SectionBlock({
     children: ReactNode;
 }) {
     return (
-        <section id={id} className="scroll-mt-24">
+        <section
+            id={id}
+            className="scroll-mt-24"
+        >
             <div className="mb-4 flex items-end justify-between gap-4">
                 <div>
                     <p className="text-xs font-medium uppercase tracking-wider text-primary">
@@ -494,6 +639,10 @@ function MobileCategoryPills() {
         {
             href: "#trending",
             label: "Trending",
+        },
+        {
+            href: "#upcoming",
+            label: "Upcoming",
         },
         {
             href: "/discover",
