@@ -18,14 +18,14 @@ export function SearchBox() {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="w-full">
       <input
         type="search"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Search movies..."
         aria-label="Search movies"
-        className="w-64 rounded-md border border-border bg-transparent px-3 py-1.5 text-sm outline-none transition focus:border-primary"
+        className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm outline-none transition focus:border-primary"
       />
     </form>
   );

@@ -1,4 +1,4 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 
 type GridMovie = {
   id: string;
@@ -22,13 +22,8 @@ export function MoviePosterGrid({
   return (
     <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6">
       {movies.map((movie) => (
-        <a
-          key={movie.id}
-          href={`/movie/${movie.id}`}
-          className="group block cursor-pointer"
-          aria-label={`Open ${movie.title}`}
-        >
-          <div className="relative aspect-[2/3] overflow-hidden rounded-md bg-muted ring-1 ring-border transition-transform duration-200 motion-safe:group-hover:-translate-y-1 group-hover:ring-primary/50">
+        <a key={movie.id} href={`/movie/${movie.id}`} className="group block cursor-pointer" aria-label={`Open ${movie.title}`}>
+          <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-muted ring-1 ring-border transition-all duration-200 motion-safe:group-hover:-translate-y-1.5 group-hover:ring-2 group-hover:ring-primary/60 group-hover:shadow-[0_8px_24px_-8px_theme(colors.primary/40%)]">
             {movie.posterUrl ? (
               <Image
                 src={movie.posterUrl}
@@ -43,11 +38,9 @@ export function MoviePosterGrid({
                 No poster
               </div>
             )}
-
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent" />
           </div>
-
-          <p className="pointer-events-none mt-1 truncate text-sm font-medium">
+          <p className="pointer-events-none mt-2 truncate text-sm font-medium">
             {movie.title}
           </p>
         </a>

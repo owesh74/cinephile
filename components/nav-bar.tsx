@@ -43,15 +43,15 @@ export async function NavBar() {
     }
 
     return (
-        <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
+        <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
             <div className="mx-auto flex h-16 max-w-[1600px] items-center gap-2 px-4 sm:gap-4 sm:px-6">
                 {/* LOGO */}
 
                 <Link
                     href="/"
-                    className="shrink-0 font-display text-xl tracking-tight text-primary transition-opacity hover:opacity-80"
+                    className="shrink-0 font-display text-xl font-semibold tracking-tight text-foreground transition-opacity hover:opacity-80"
                 >
-                    Onyx
+                    <span className="text-primary">Onyx</span>
                 </Link>
 
                 {/* DESKTOP SEARCH */}
@@ -63,7 +63,7 @@ export async function NavBar() {
                 {/* DESKTOP NAV */}
 
                 {profile && (
-                    <div className="hidden items-center gap-1 lg:flex">
+                    <div className="hidden items-center gap-1 rounded-full border border-border bg-card/60 p-1 lg:flex">
                         <NavLink href="/discover">
                             Discover
                         </NavLink>
@@ -90,7 +90,7 @@ export async function NavBar() {
                     {profile && (
                         <Link
                             href="/add"
-                            className="hidden items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted sm:flex"
+                            className="hidden items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20 sm:flex"
                         >
                             <Plus className="h-4 w-4" />
 
@@ -117,7 +117,7 @@ export async function NavBar() {
                                 exact
                                 className="flex items-center gap-2 !px-2 !py-1.5"
                             >
-                                <Avatar className="h-8 w-8">
+                                <Avatar className="h-8 w-8 ring-2 ring-transparent transition-all hover:ring-primary/50">
                                     <AvatarImage
                                         src={
                                             profile.avatarUrl ??
@@ -126,7 +126,7 @@ export async function NavBar() {
                                         alt={profile.username}
                                     />
 
-                                    <AvatarFallback>
+                                    <AvatarFallback className="bg-primary/15 font-semibold text-primary">
                                         {profile.username
                                             .charAt(0)
                                             .toUpperCase()}
@@ -160,7 +160,7 @@ export async function NavBar() {
                             </Link>
 
                             <Link href="/register">
-                                <Button size="sm">
+                                <Button size="sm" className="font-semibold">
                                     Register
                                 </Button>
                             </Link>
