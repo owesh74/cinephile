@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
-
 import { logoutAction } from "@/lib/actions/auth";
 
 import { Button } from "@/components/ui/button";
@@ -14,11 +13,11 @@ import {
 } from "@/components/ui/avatar";
 
 import Link from "next/link";
+import Image from "next/image";
 
 import { SearchBox } from "@/components/search-box";
 import { NavLink } from "@/components/nav-link";
 import { MobileNav } from "@/components/mobile-nav";
-
 import { Plus } from "lucide-react";
 
 export async function NavBar() {
@@ -47,32 +46,53 @@ export async function NavBar() {
     }
 
     return (
-        <nav className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur-xl">
-            <div className="mx-auto flex h-16 max-w-[1600px] items-center gap-3 px-4 sm:gap-4 sm:px-6 lg:px-8">
+        <nav className="sticky top-0 z-50 border-b border-border/70 bg-background/90 backdrop-blur-xl">
+            <div className="mx-auto flex h-[72px] max-w-[1600px] items-center gap-4 px-4 sm:px-6 lg:gap-7">
 
+                {/* ================================================== */}
                 {/* LOGO */}
+                {/* ================================================== */}
 
                 <Link
                     href="/"
-                    className="group shrink-0 font-display text-xl font-semibold tracking-tight"
+                    aria-label="Popcorn home"
+                    className="group flex shrink-0 items-center"
                 >
-                    <span className="text-primary transition-opacity group-hover:opacity-80">
-                        Onyx
-                    </span>
+                    <Image
+                        src="/popcorn-logo.png"
+                        alt="Popcorn"
+                        width={220}
+                        height={80}
+                        priority
+                        className="
+                            h-auto
+                            w-[125px]
+                            object-contain
+                            transition-transform
+                            duration-200
+                            group-hover:scale-[1.02]
+                            sm:w-[145px]
+                        "
+                    />
                 </Link>
 
+                {/* ================================================== */}
                 {/* DESKTOP SEARCH */}
+                {/* ================================================== */}
 
-                <div className="hidden min-w-0 flex-1 sm:block sm:max-w-xs lg:max-w-md">
+                <div className="hidden min-w-0 flex-1 sm:block sm:max-w-[300px] lg:max-w-[380px] xl:max-w-[430px]">
                     <div className="relative">
                         <SearchBox />
                     </div>
                 </div>
 
-                {/* DESKTOP NAV */}
+                {/* ================================================== */}
+                {/* DESKTOP NAVIGATION */}
+                {/* ================================================== */}
 
                 {profile && (
-                    <div className="hidden items-center gap-1 rounded-xl border border-border bg-card/60 p-1 lg:flex">
+                    <div className="hidden items-center gap-1 lg:flex">
+
                         <NavLink href="/discover">
                             Discover
                         </NavLink>
@@ -88,19 +108,40 @@ export async function NavBar() {
                         <NavLink href="/friends">
                             Friends
                         </NavLink>
+
                     </div>
                 )}
 
+                {/* ================================================== */}
                 {/* RIGHT SIDE */}
+                {/* ================================================== */}
 
-                <div className="ml-auto flex items-center gap-2">
+                <div className="ml-auto flex items-center gap-2 sm:gap-3">
 
                     {/* ADD MOVIE */}
 
                     {profile && (
                         <Link
                             href="/add"
-                            className="hidden items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition-colors hover:border-primary/50 hover:bg-primary/15 sm:flex"
+                            className="
+                                hidden
+                                items-center
+                                gap-2
+                                rounded-lg
+                                border
+                                border-primary/50
+                                bg-primary/10
+                                px-3.5
+                                py-2
+                                text-sm
+                                font-semibold
+                                text-primary
+                                transition-all
+                                duration-200
+                                hover:bg-primary
+                                hover:text-primary-foreground
+                                sm:flex
+                            "
                         >
                             <Plus className="h-4 w-4" />
 
@@ -110,7 +151,9 @@ export async function NavBar() {
                         </Link>
                     )}
 
+                    {/* ================================================== */}
                     {/* MOBILE MENU */}
+                    {/* ================================================== */}
 
                     <MobileNav
                         loggedIn={!!profile}
@@ -118,17 +161,39 @@ export async function NavBar() {
                         avatarUrl={profile?.avatarUrl}
                     />
 
+                    {/* ================================================== */}
                     {/* DESKTOP ACCOUNT */}
+                    {/* ================================================== */}
 
                     {profile ? (
-                        <div className="hidden items-center gap-2 lg:flex">
+                        <div className="hidden items-center gap-3 lg:flex">
 
                             <NavLink
                                 href="/profile"
                                 exact
-                                className="flex items-center gap-2 !px-2 !py-1.5"
+                                className="
+                                    flex
+                                    items-center
+                                    gap-2
+                                    !rounded-lg
+                                    !px-2
+                                    !py-1.5
+                                "
                             >
-                                <Avatar className="h-8 w-8 ring-1 ring-border transition-all hover:ring-primary/50">
+                                <Avatar
+                                    className="
+                                        h-9
+                                        w-9
+                                        border
+                                        border-border
+                                        ring-1
+                                        ring-transparent
+                                        transition-all
+                                        duration-200
+                                        hover:border-primary/60
+                                        hover:ring-primary/20
+                                    "
+                                >
                                     <AvatarImage
                                         src={
                                             profile.avatarUrl ??
@@ -137,7 +202,13 @@ export async function NavBar() {
                                         alt={profile.username}
                                     />
 
-                                    <AvatarFallback className="bg-primary/10 font-semibold text-primary">
+                                    <AvatarFallback
+                                        className="
+                                            bg-primary/10
+                                            font-semibold
+                                            text-primary
+                                        "
+                                    >
                                         {profile.username
                                             .charAt(0)
                                             .toUpperCase()}
@@ -149,23 +220,38 @@ export async function NavBar() {
                                 </span>
                             </NavLink>
 
+                            {/* LOGOUT */}
+
                             <form action={logoutAction}>
                                 <Button
                                     type="submit"
                                     variant="outline"
                                     size="sm"
-                                    className="border-border bg-background/50"
+                                    className="
+                                        border-border/80
+                                        transition-colors
+                                        hover:border-primary/40
+                                        hover:text-primary
+                                    "
                                 >
                                     Logout
                                 </Button>
                             </form>
+
                         </div>
                     ) : (
-                        <div className="hidden items-center gap-1 sm:flex">
+
+                        /* ================================================== */
+                        /* LOGGED OUT */
+                        /* ================================================== */
+
+                        <div className="hidden items-center gap-2 sm:flex">
+
                             <Link href="/login">
                                 <Button
                                     variant="ghost"
                                     size="sm"
+                                    className="text-muted-foreground hover:text-foreground"
                                 >
                                     Log in
                                 </Button>
@@ -174,11 +260,12 @@ export async function NavBar() {
                             <Link href="/register">
                                 <Button
                                     size="sm"
-                                    className="font-semibold"
+                                    className="font-semibold shadow-sm"
                                 >
                                     Register
                                 </Button>
                             </Link>
+
                         </div>
                     )}
                 </div>
