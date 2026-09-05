@@ -110,14 +110,24 @@ async function findOrCreatePerson(name: string) {
   return created.id;
 }
 
+function parseSeriesCount(value: FormDataEntryValue | null) {
+  const parsed = Number(String(value ?? "0"));
+
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    return null;
+  }
+
+  return parsed;
+}
+
 export async function createMovieAction(formData: FormData) {
   await requireUser();
 
   // Build the validation object explicitly so the uploaded File never gets
-  // passed into the movie metadata schema. The poster is handled separately
-  // below as a real File.
+  // passed into the movie metadata schema.
   const raw = {
     title: String(formData.get("title") ?? ""),
+    mediaType: String(formData.get("mediaType") ?? "movie"),
     originalTitle: String(formData.get("originalTitle") ?? ""),
     releaseYear: String(formData.get("releaseYear") ?? ""),
     runtimeMinutes: String(formData.get("runtimeMinutes") ?? ""),
@@ -138,7 +148,18 @@ export async function createMovieAction(formData: FormData) {
   }
 
   const data = parsed.data;
+  const seasonCount = parseSeriesCount(formData.get("seasonCount"));
+  const episodeCount = parseSeriesCount(formData.get("episodeCount"));
 
+  if (data.mediaType === "series") {
+    if (seasonCount === null) {
+      return { error: "Seasons must be a whole number of 0 or greater" };
+    }
+
+    if (episodeCount === null) {
+      return { error: "Episodes must be a whole number of 0 or greater" };
+    }
+  }
   const duplicate = await db.query.movies.findFirst({
     where: (m, { eq }) => eq(m.title, data.title),
   });
@@ -150,7 +171,6 @@ export async function createMovieAction(formData: FormData) {
   let posterUrl: string | undefined;
 
   // Keep the uploaded poster completely separate from the text metadata.
-  // Server Actions receive file inputs as File objects inside FormData.
   const posterEntry = formData.get("poster");
   const posterFile = posterEntry instanceof File ? posterEntry : null;
 
@@ -224,6 +244,7 @@ export async function createMovieAction(formData: FormData) {
     .insert(movies)
     .values({
       title: data.title,
+      mediaType: data.mediaType,
       originalTitle: data.originalTitle || null,
       posterUrl: posterUrl ?? null,
       releaseDate: data.releaseYear
@@ -235,11 +256,14 @@ export async function createMovieAction(formData: FormData) {
       description: data.description || null,
       language: data.language || null,
       imdbScore: data.imdbScore || null,
+      seasonCount: data.mediaType === "series" ? seasonCount ?? 0 : 0,
+      episodeCount: data.mediaType === "series" ? episodeCount ?? 0 : 0,
     })
     .returning();
 
-  console.log("MOVIE CREATE - database result:", {
+  console.log("MEDIA CREATE - database result:", {
     movieId: movie.id,
+    mediaType: movie.mediaType,
     posterUrl: movie.posterUrl,
   });
 
@@ -359,6 +383,7 @@ export async function updateMovieAction(
 
   const raw = {
     title: String(formData.get("title") ?? ""),
+    mediaType: String(formData.get("mediaType") ?? "movie"),
     originalTitle: String(formData.get("originalTitle") ?? ""),
     releaseYear: String(formData.get("releaseYear") ?? ""),
     runtimeMinutes: String(formData.get("runtimeMinutes") ?? ""),
@@ -379,7 +404,18 @@ export async function updateMovieAction(
   }
 
   const data = parsed.data;
+    const seasonCount = parseSeriesCount(formData.get("seasonCount"));
+  const episodeCount = parseSeriesCount(formData.get("episodeCount"));
 
+  if (data.mediaType === "series") {
+    if (seasonCount === null) {
+      return { error: "Seasons must be a whole number of 0 or greater" };
+    }
+
+    if (episodeCount === null) {
+      return { error: "Episodes must be a whole number of 0 or greater" };
+    }
+  }
   const existingMovie = await db.query.movies.findFirst({
     where: (m, { eq }) => eq(m.id, movieId),
   });
@@ -398,7 +434,6 @@ export async function updateMovieAction(
     };
   }
 
-  // Keep the existing poster unless a new one was uploaded.
   let posterUrl = existingMovie.posterUrl;
 
   const posterFile = formData.get("poster") as File | null;
@@ -505,11 +540,15 @@ export async function updateMovieAction(
       description: data.description || null,
       language: data.language || null,
       imdbScore: data.imdbScore || null,
+      mediaType: data.mediaType,
+      seasonCount: data.mediaType === "series" ? seasonCount ?? 0 : 0,
+      episodeCount: data.mediaType === "series" ? episodeCount ?? 0 : 0,
     })
     .where(eq(movies.id, movieId))
     .returning({
       id: movies.id,
       posterUrl: movies.posterUrl,
+      mediaType: movies.mediaType,
     });
 
   if (updatedMovies.length === 0) {
@@ -528,6 +567,7 @@ export async function updateMovieAction(
   console.log("MOVIE UPDATE - database result:", {
     movieId: updatedMovie.id,
     posterUrl: updatedMovie.posterUrl,
+    mediaType: updatedMovie.mediaType,
   });
 
   if (posterUrl !== updatedMovie.posterUrl) {
@@ -668,6 +708,7 @@ export async function updateMovieAction(
   console.log("MOVIE UPDATE - completed successfully:", {
     movieId,
     posterUrl,
+    mediaType: updatedMovie.mediaType,
   });
 
   redirect(`/movie/${movieId}`);

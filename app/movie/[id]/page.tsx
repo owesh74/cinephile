@@ -45,14 +45,14 @@ export default async function MoviePage({
             db.query.watchlist.findFirst({
                 where: and(
                     eq(watchlist.userId, user.id),
-                    eq(watchlist.movieId, id)
+                    eq(watchlist.movieId, id),
                 ),
             }),
 
             db.query.watched.findFirst({
                 where: and(
                     eq(watched.userId, user.id),
-                    eq(watched.movieId, id)
+                    eq(watched.movieId, id),
                 ),
             }),
         ]);
@@ -78,11 +78,14 @@ export default async function MoviePage({
         ? new Date(movie.releaseDate).getFullYear()
         : null;
 
+    const isSeries = movie.mediaType === "series";
+    const isGame = movie.mediaType === "game";
+
     return (
         <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
             <div className="space-y-10">
                 {/* =====================================================
-                    MOVIE HERO
+                    HERO
                 ====================================================== */}
                 <section className="relative">
                     {/* Backdrop */}
@@ -117,10 +120,20 @@ export default async function MoviePage({
                         </div>
 
                         {/* =================================================
-                            MOVIE INFORMATION
+                            MEDIA INFORMATION
                         ================================================== */}
                         <div className="min-w-0 flex-1 space-y-4">
                             <div>
+                                <div className="mb-2 flex flex-wrap items-center gap-2">
+                                    <span className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                                        {isSeries
+                                            ? "Series"
+                                            : isGame
+                                              ? "Game"
+                                              : "Movie"}
+                                    </span>
+                                </div>
+
                                 <h1 className="break-words font-display text-3xl font-semibold italic leading-tight sm:text-4xl">
                                     {movie.title}
                                 </h1>
@@ -143,16 +156,22 @@ export default async function MoviePage({
                                             •
                                         </span>
 
-                                        <span>
-                                            {Math.floor(
-                                                movie.runtimeMinutes / 60
-                                            )}
-                                            :
-                                            {String(
-                                                movie.runtimeMinutes % 60
-                                            ).padStart(2, "0")}{" "}
-                                            runtime
-                                        </span>
+                                        {isSeries ? (
+                                            <span>
+                                                {movie.runtimeMinutes}m/ep
+                                            </span>
+                                        ) : (
+                                            <span>
+                                                {Math.floor(
+                                                    movie.runtimeMinutes / 60,
+                                                )}
+                                                :
+                                                {String(
+                                                    movie.runtimeMinutes % 60,
+                                                ).padStart(2, "0")}{" "}
+                                                runtime
+                                            </span>
+                                        )}
                                     </>
                                 )}
 
@@ -258,6 +277,33 @@ export default async function MoviePage({
                 </section>
 
                 {/* =====================================================
+                    SERIES SUMMARY
+                ====================================================== */}
+                {isSeries && (
+                    <section className="rounded-2xl border border-border bg-card/40 p-5 sm:p-6">
+                        <div className="flex items-center justify-between gap-4">
+                            <div>
+                                <h2 className="text-xl font-semibold">
+                                    Series
+                                </h2>
+
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    {movie.seasonCount}{" "}
+                                    {movie.seasonCount === 1
+                                        ? "season"
+                                        : "seasons"}
+                                    {" • "}
+                                    {movie.episodeCount}{" "}
+                                    {movie.episodeCount === 1
+                                        ? "episode"
+                                        : "episodes"}
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+                )}
+
+                {/* =====================================================
                     DIRECTOR / WRITERS
                 ====================================================== */}
                 {(movie.directors.length > 0 ||
@@ -267,7 +313,9 @@ export default async function MoviePage({
                         {movie.directors.length > 0 && (
                             <div>
                                 <h2 className="mb-4 text-lg font-semibold">
-                                    Director
+                                    {isSeries
+                                        ? "Creator / Director"
+                                        : "Director"}
                                 </h2>
 
                                 <div className="grid grid-cols-3 gap-x-3 gap-y-6 sm:flex sm:flex-wrap sm:gap-5">
@@ -419,17 +467,12 @@ export default async function MoviePage({
                 {similarMovies.length > 0 && (
                     <section>
                         <h2 className="mb-4 text-lg font-semibold">
-                            Similar movies
+                            {isSeries ? "Similar series" : "Similar movies"}
                         </h2>
 
                         <MoviePosterGrid movies={similarMovies} />
                     </section>
                 )}
-
-                {/* =====================================================
-                    PLACEHOLDER
-                ====================================================== */}
-                
             </div>
         </main>
     );

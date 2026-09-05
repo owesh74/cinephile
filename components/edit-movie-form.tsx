@@ -6,8 +6,9 @@ import { updateMovieAction } from "@/lib/actions/movies";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
 import { MovieMetadataFields } from "@/components/movie-metadata-fields";
+
+type MediaType = "movie" | "series" | "game";
 
 type Person = {
     id: string;
@@ -20,8 +21,11 @@ type EditMovieFormProps = {
     title: string;
     originalTitle: string | null;
     posterUrl: string | null;
+    mediaType: MediaType;
     releaseYear: string;
     runtimeMinutes: number | null;
+    seasonCount: number;
+    episodeCount: number;
     description: string | null;
     language: string | null;
     imdbScore: string | null;
@@ -38,8 +42,11 @@ export function EditMovieForm({
     title,
     originalTitle,
     posterUrl,
+    mediaType: initialMediaType,
     releaseYear,
     runtimeMinutes,
+    seasonCount,
+    episodeCount,
     description,
     language,
     imdbScore,
@@ -53,13 +60,32 @@ export function EditMovieForm({
     const [error, setError] = useState<string | null>(null);
     const [pending, startTransition] = useTransition();
 
+    const [mediaType, setMediaType] =
+        useState<MediaType>(initialMediaType);
+
     function handleSubmit(formData: FormData) {
         setError(null);
+
+        // Make absolutely sure the selected media type is submitted.
+        formData.set("mediaType", mediaType);
+
+        // Series uses simple numeric totals instead of individual
+        // season/episode records.
+        if (mediaType === "series") {
+            formData.set("seasonCount", String(seasonCountInputValue(formData)));
+            formData.set(
+                "episodeCount",
+                String(episodeCountInputValue(formData)),
+            );
+        } else {
+            formData.set("seasonCount", "0");
+            formData.set("episodeCount", "0");
+        }
 
         startTransition(async () => {
             const result = await updateMovieAction(
                 movieId,
-                formData
+                formData,
             );
 
             if (result?.error) {
@@ -68,19 +94,125 @@ export function EditMovieForm({
         });
     }
 
+    function seasonCountInputValue(formData: FormData) {
+        return Number(formData.get("seasonCount") ?? 0);
+    }
+
+    function episodeCountInputValue(formData: FormData) {
+        return Number(formData.get("episodeCount") ?? 0);
+    }
+
+    const isSeries = mediaType === "series";
+    const isGame = mediaType === "game";
+
+    const mediaLabel = isSeries
+        ? "Series"
+        : isGame
+          ? "Game"
+          : "Movie";
+
     return (
         <form
             action={handleSubmit}
             className="space-y-6"
         >
-            {/* Error */}
+            {/* =========================================================
+                ERROR
+            ========================================================== */}
             {error && (
                 <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-500">
                     {error}
                 </div>
             )}
 
-            {/* Basic information */}
+            {/* =========================================================
+                MEDIA TYPE
+            ========================================================== */}
+            <section className="rounded-xl border border-border bg-card p-5 sm:p-6">
+                <div className="mb-5">
+                    <h2 className="text-lg font-semibold">
+                        Media type
+                    </h2>
+
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        Choose whether this entry is a movie, series or game.
+                    </p>
+                </div>
+
+                <input
+                    type="hidden"
+                    name="mediaType"
+                    value={mediaType}
+                />
+
+                <div className="grid grid-cols-3 gap-2 rounded-xl bg-muted/50 p-1">
+                    <button
+                        type="button"
+                        onClick={() => setMediaType("movie")}
+                        className={`rounded-lg px-3 py-3 text-sm font-medium transition ${
+                            mediaType === "movie"
+                                ? "bg-primary text-primary-foreground shadow-sm"
+                                : "text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                        Movie
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setMediaType("series")}
+                        className={`rounded-lg px-3 py-3 text-sm font-medium transition ${
+                            mediaType === "series"
+                                ? "bg-primary text-primary-foreground shadow-sm"
+                                : "text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                        Series
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setMediaType("game")}
+                        className={`rounded-lg px-3 py-3 text-sm font-medium transition ${
+                            mediaType === "game"
+                                ? "bg-primary text-primary-foreground shadow-sm"
+                                : "text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                        Game
+                    </button>
+                </div>
+
+                {isSeries && (
+                    <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
+                        <p className="text-sm font-medium">
+                            Series selected
+                        </p>
+
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                            Enter the total number of seasons and episodes for
+                            this series.
+                        </p>
+                    </div>
+                )}
+
+                {isGame && (
+                    <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
+                        <p className="text-sm font-medium">
+                            Game selected
+                        </p>
+
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                            Game-specific metadata and reviews will be added
+                            separately.
+                        </p>
+                    </div>
+                )}
+            </section>
+
+            {/* =========================================================
+                BASIC INFORMATION
+            ========================================================== */}
             <section className="rounded-xl border border-border bg-card p-5 sm:p-6">
                 <div className="mb-5">
                     <h2 className="text-lg font-semibold">
@@ -95,7 +227,7 @@ export function EditMovieForm({
                 <div className="space-y-4">
                     <Input
                         name="title"
-                        placeholder="Title *"
+                        placeholder={`${mediaLabel} title *`}
                         defaultValue={title}
                         required
                     />
@@ -115,16 +247,27 @@ export function EditMovieForm({
 
                         <Input
                             name="runtimeMinutes"
-                            placeholder="Runtime (minutes)"
+                            placeholder={
+                                isSeries
+                                    ? "Episode runtime (minutes)"
+                                    : "Runtime (minutes)"
+                            }
                             defaultValue={
                                 runtimeMinutes?.toString() ?? ""
                             }
+                            inputMode="numeric"
                         />
                     </div>
 
                     <textarea
                         name="description"
-                        placeholder="Description"
+                        placeholder={
+                            isGame
+                                ? "Game description"
+                                : isSeries
+                                  ? "Series description"
+                                  : "Description"
+                        }
                         rows={5}
                         defaultValue={description ?? ""}
                         className="w-full resize-y rounded-md border border-border bg-input p-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30"
@@ -132,11 +275,70 @@ export function EditMovieForm({
                 </div>
             </section>
 
-            {/* Poster */}
+            {/* =========================================================
+                SERIES COUNTS
+            ========================================================== */}
+            {isSeries && (
+                <section className="rounded-xl border border-border bg-card p-5 sm:p-6">
+                    <div className="mb-5">
+                        <h2 className="text-lg font-semibold">
+                            Series counts
+                        </h2>
+
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            Enter the total number of seasons and episodes.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                            <label
+                                htmlFor="seasonCount"
+                                className="text-sm font-medium"
+                            >
+                                Seasons
+                            </label>
+
+                            <Input
+                                id="seasonCount"
+                                name="seasonCount"
+                                type="number"
+                                min="0"
+                                step="1"
+                                defaultValue={seasonCount}
+                                inputMode="numeric"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label
+                                htmlFor="episodeCount"
+                                className="text-sm font-medium"
+                            >
+                                Episodes
+                            </label>
+
+                            <Input
+                                id="episodeCount"
+                                name="episodeCount"
+                                type="number"
+                                min="0"
+                                step="1"
+                                defaultValue={episodeCount}
+                                inputMode="numeric"
+                            />
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {/* =========================================================
+                POSTER
+            ========================================================== */}
             <section className="rounded-xl border border-border bg-card p-5 sm:p-6">
                 <div className="mb-5">
                     <h2 className="text-lg font-semibold">
-                        Movie poster
+                        {mediaLabel} poster
                     </h2>
 
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -172,20 +374,23 @@ export function EditMovieForm({
                                 </p>
 
                                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                                    Leave the upload field empty to
-                                    keep this poster.
+                                    Leave the upload field empty to keep
+                                    this poster.
                                 </p>
                             </div>
                         </div>
                     ) : (
                         <p className="mt-3 text-xs text-muted-foreground">
-                            This movie currently has no poster.
+                            This {mediaLabel.toLowerCase()} currently has no
+                            poster.
                         </p>
                     )}
                 </div>
             </section>
 
-            {/* Rating / language */}
+            {/* =========================================================
+                RATING / LANGUAGE
+            ========================================================== */}
             <section className="rounded-xl border border-border bg-card p-5 sm:p-6">
                 <div className="mb-5">
                     <h2 className="text-lg font-semibold">
@@ -210,20 +415,27 @@ export function EditMovieForm({
                         name="imdbScore"
                         placeholder="IMDb score (0-10)"
                         defaultValue={imdbScore ?? ""}
+                        inputMode="decimal"
                     />
                 </div>
             </section>
 
-            {/* Metadata selectors */}
+            {/* =========================================================
+                METADATA
+            ========================================================== */}
             <section className="rounded-xl border border-border bg-card p-5 sm:p-6">
                 <div className="mb-6">
                     <h2 className="text-lg font-semibold">
-                        Movie details
+                        {isGame
+                            ? "Game details"
+                            : isSeries
+                              ? "Series details"
+                              : "Movie details"}
                     </h2>
 
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Choose genres, countries and people associated
-                        with this movie.
+                        Choose genres, countries and people associated with
+                        this {mediaLabel.toLowerCase()}.
                     </p>
                 </div>
 
@@ -238,7 +450,9 @@ export function EditMovieForm({
                 />
             </section>
 
-            {/* Save */}
+            {/* =========================================================
+                SAVE
+            ========================================================== */}
             <div className="sticky bottom-4 z-10 rounded-xl border border-border bg-card/95 p-3 shadow-lg backdrop-blur">
                 <Button
                     type="submit"
@@ -247,7 +461,7 @@ export function EditMovieForm({
                 >
                     {pending
                         ? "Saving changes..."
-                        : "Save changes"}
+                        : `Save ${mediaLabel.toLowerCase()}`}
                 </Button>
             </div>
         </form>

@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 
+type MediaType = "movie" | "series" | "game";
+
 type Person = {
   id: string;
   name: string;
@@ -31,9 +33,13 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [duplicateLink, setDuplicateLink] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  const [mediaType, setMediaType] = useState<MediaType>("movie");
+
   const [posterPreview, setPosterPreview] = useState<string | null>(null);
   const [posterName, setPosterName] = useState<string | null>(null);
   const [posterSize, setPosterSize] = useState<number | null>(null);
+
   const posterInputRef = useRef<HTMLInputElement>(null);
 
   function handlePosterChange(file: File | null) {
@@ -69,9 +75,11 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
 
   function formatFileSize(bytes: number | null) {
     if (bytes === null) return "";
+
     if (bytes < 1024 * 1024) {
       return `${Math.max(1, Math.round(bytes / 1024))} KB`;
     }
+
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
@@ -91,6 +99,8 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
     setError(null);
     setDuplicateLink(null);
 
+    formData.set("mediaType", mediaType);
+
     startTransition(async () => {
       const result = await createMovieAction(formData);
 
@@ -102,14 +112,30 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
     });
   }
 
+  const isSeries = mediaType === "series";
+  const isGame = mediaType === "game";
+
+  const titleLabel = isSeries
+    ? "Series title *"
+    : isGame
+      ? "Game title *"
+      : "Movie title *";
+
+  const titlePlaceholder = isSeries
+    ? "Series title *"
+    : isGame
+      ? "Game title *"
+      : "Movie title *";
+
   return (
     <div className="space-y-8">
       {!showForm && (
         <section className="rounded-2xl border border-border bg-card/40 p-5 sm:p-6">
           <div className="mb-5">
-            <h2 className="text-lg font-semibold">Find the movie first</h2>
+            <h2 className="text-lg font-semibold">Find existing media first</h2>
+
             <p className="mt-1 text-sm text-muted-foreground">
-              Search Cinephile before adding a new movie so you don't create
+              Search Cinephile before adding something new so you don't create
               duplicates.
             </p>
           </div>
@@ -124,7 +150,7 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
                   handleSearch();
                 }
               }}
-              placeholder="Search by movie title..."
+              placeholder="Search by title..."
               className="h-11"
             />
 
@@ -139,7 +165,7 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
 
           {searched && results.length > 0 && (
             <div className="mt-6 space-y-3">
-              <p className="text-sm font-medium">Existing movies</p>
+              <p className="text-sm font-medium">Existing media</p>
 
               {results.map((movie) => (
                 <Link
@@ -162,7 +188,7 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
                 onClick={() => setShowForm(true)}
                 className="pt-2 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
               >
-                Not the movie you're looking for? Add a new one
+                Not what you're looking for? Add new media
               </button>
             </div>
           )}
@@ -170,7 +196,7 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
           {searched && results.length === 0 && (
             <div className="mt-6 rounded-xl border border-dashed border-border p-4">
               <p className="text-sm text-muted-foreground">
-                No matching movies found. The movie form is ready below.
+                No matching media found. The form is ready below.
               </p>
             </div>
           )}
@@ -179,14 +205,17 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
 
       {showForm && (
         <form action={handleCreate} className="space-y-6">
+          <input type="hidden" name="mediaType" value={mediaType} />
+
           {duplicateLink && (
             <div className="rounded-xl border border-yellow-500/50 bg-yellow-500/10 p-4 text-sm">
-              <p className="font-medium">This movie already exists.</p>
+              <p className="font-medium">This media already exists.</p>
+
               <Link
                 href={`/movie/${duplicateLink}`}
                 className="mt-1 inline-block underline underline-offset-4"
               >
-                View the existing movie
+                View the existing entry
               </Link>
             </div>
           )}
@@ -198,17 +227,76 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
           )}
 
           <section className="rounded-2xl border border-border bg-card/40 p-5 sm:p-6">
-            <div className="mb-5">
-              <h2 className="text-lg font-semibold">Movie details</h2>
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold">Add media</h2>
+
               <p className="mt-1 text-sm text-muted-foreground">
-                Basic information about the movie.
+                Choose what you're adding to Cinephile.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 rounded-xl bg-muted/50 p-1">
+              <button
+                type="button"
+                onClick={() => setMediaType("movie")}
+                className={`rounded-lg px-3 py-3 text-sm font-medium transition ${
+                  mediaType === "movie"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Movie
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMediaType("series")}
+                className={`rounded-lg px-3 py-3 text-sm font-medium transition ${
+                  mediaType === "series"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Series
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMediaType("game")}
+                className={`rounded-lg px-3 py-3 text-sm font-medium transition ${
+                  mediaType === "game"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Game
+              </button>
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-border bg-card/40 p-5 sm:p-6">
+            <div className="mb-5">
+              <h2 className="text-lg font-semibold">
+                {isSeries
+                  ? "Series details"
+                  : isGame
+                    ? "Game details"
+                    : "Movie details"}
+              </h2>
+
+              <p className="mt-1 text-sm text-muted-foreground">
+                {isSeries
+                  ? "Basic information about the series."
+                  : isGame
+                    ? "Basic information about the game."
+                    : "Basic information about the movie."}
               </p>
             </div>
 
             <div className="space-y-4">
               <Input
                 name="title"
-                placeholder="Movie title *"
+                placeholder={titlePlaceholder}
                 defaultValue={query}
                 required
               />
@@ -221,6 +309,7 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
               <div className="rounded-xl border border-border bg-background/30 p-4">
                 <div className="mb-4">
                   <p className="text-sm font-medium">Poster</p>
+
                   <p className="mt-1 text-xs text-muted-foreground">
                     JPG, PNG, WEBP or another image format. Maximum 5MB.
                   </p>
@@ -239,10 +328,14 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
 
                       <div className="min-w-0 flex-1">
                         <div className="mb-3">
-                          <p className="text-sm font-medium">Poster selected</p>
+                          <p className="text-sm font-medium">
+                            Poster selected
+                          </p>
+
                           <p className="mt-1 truncate text-sm text-muted-foreground">
                             {posterName}
                           </p>
+
                           <p className="mt-1 text-xs text-muted-foreground">
                             {formatFileSize(posterSize)}
                           </p>
@@ -251,7 +344,9 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
                         <div className="flex flex-wrap gap-2">
                           <button
                             type="button"
-                            onClick={() => posterInputRef.current?.click()}
+                            onClick={() =>
+                              posterInputRef.current?.click()
+                            }
                             className="rounded-md border border-border px-3 py-2 text-sm font-medium transition hover:bg-muted"
                           >
                             Change poster
@@ -277,16 +372,18 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
                     <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full border border-border text-xl">
                       +
                     </div>
-                    <span className="text-sm font-medium">Choose poster image</span>
+
+                    <span className="text-sm font-medium">
+                      Choose poster image
+                    </span>
+
                     <span className="mt-1 text-xs text-muted-foreground">
                       Click to browse your computer
                     </span>
                   </button>
                 )}
 
-                {/* Keep ONE file input mounted for the entire lifetime of the form.
-                    If the input is conditionally replaced after selecting a file,
-                    the browser drops the selected File from FormData. */}
+                {/* Keep ONE file input mounted for the entire lifetime of the form. */}
                 <input
                   ref={posterInputRef}
                   type="file"
@@ -308,14 +405,42 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
 
                 <Input
                   name="runtimeMinutes"
-                  placeholder="Runtime (minutes)"
+                  placeholder={
+                    isSeries
+                      ? "Episode runtime (minutes)"
+                      : "Runtime (minutes)"
+                  }
                   inputMode="numeric"
                 />
               </div>
 
+              {isSeries && (
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                  <p className="text-sm font-medium">Series</p>
+
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Episode and season management will be added next. For now,
+                    the runtime above represents the typical episode runtime.
+                  </p>
+                </div>
+              )}
+
+              {isGame && (
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                  <p className="text-sm font-medium">Game</p>
+
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Game-specific metadata and reviews will be added in the
+                    next stage.
+                  </p>
+                </div>
+              )}
+
               <textarea
                 name="description"
-                placeholder="Description"
+                placeholder={
+                  isGame ? "Game description" : "Description"
+                }
                 rows={5}
                 className="w-full rounded-md border border-border bg-input p-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary"
               />
@@ -323,7 +448,11 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
               <div className="grid gap-4 sm:grid-cols-2">
                 <Input
                   name="imdbScore"
-                  placeholder="IMDb score (0-10)"
+                  placeholder={
+                    isGame
+                      ? "IMDb score (optional)"
+                      : "IMDb score (0-10)"
+                  }
                   inputMode="decimal"
                 />
               </div>
@@ -332,9 +461,12 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
 
           <section className="rounded-2xl border border-border bg-card/40 p-5 sm:p-6">
             <div className="mb-6">
-              <h2 className="text-lg font-semibold">Movie metadata</h2>
+              <h2 className="text-lg font-semibold">
+                {isGame ? "Game metadata" : "Media metadata"}
+              </h2>
+
               <p className="mt-1 text-sm text-muted-foreground">
-                Use the suggestions to keep Cinephile's movie data consistent.
+                Use the suggestions to keep Cinephile's data consistent.
               </p>
             </div>
 
@@ -347,7 +479,13 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
               disabled={pending}
               className="h-11 w-full"
             >
-              {pending ? "Creating movie..." : "Create movie"}
+              {pending
+                ? "Creating..."
+                : isSeries
+                  ? "Create series"
+                  : isGame
+                    ? "Create game"
+                    : "Create movie"}
             </Button>
           </div>
         </form>
