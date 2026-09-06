@@ -7,11 +7,11 @@ export const createMovieSchema = z.object({
 
   originalTitle: z.string().max(200).optional(),
 
-  releaseYear: z
-    .string()
-    .regex(/^\d{4}$/, "Enter a 4-digit year")
-    .optional()
-    .or(z.literal("")),
+ releaseYear: z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Enter a valid release date")
+  .optional()
+  .or(z.literal("")),
 
   runtimeMinutes: z
     .string()

@@ -129,8 +129,8 @@ export default async function MoviePage({
                                         {isSeries
                                             ? "Series"
                                             : isGame
-                                              ? "Game"
-                                              : "Movie"}
+                                                ? "Game"
+                                                : "Movie"}
                                     </span>
                                 </div>
 
@@ -224,18 +224,20 @@ export default async function MoviePage({
                             )}
 
                             {/* Rating */}
-                            {user && (
-                                <div className="rounded-lg border border-border/60 bg-background/50 p-3 sm:p-4">
-                                    <p className="mb-2 text-sm font-medium">
-                                        Your rating
-                                    </p>
+                            {user &&
+                                (!movie.releaseDate ||
+                                    movie.releaseDate <= new Date().toISOString().slice(0, 10)) && (
+                                    <div className="rounded-lg border border-border/60 bg-background/50 p-3 sm:p-4">
+                                        <p className="mb-2 text-sm font-medium">
+                                            Your rating
+                                        </p>
 
-                                    <RatingWidget
-                                        movieId={movie.id}
-                                        initialScore={userRating}
-                                    />
-                                </div>
-                            )}
+                                        <RatingWidget
+                                            movieId={movie.id}
+                                            initialScore={userRating}
+                                        />
+                                    </div>
+                                )}
 
                             {/* Scores */}
                             <div className="flex flex-wrap gap-x-8 gap-y-4 border-y border-border/60 py-4">
@@ -257,10 +259,9 @@ export default async function MoviePage({
                                     <p className="text-xs text-muted-foreground">
                                         Cinephile Score{" "}
                                         {ratingCount > 0 &&
-                                            `(${ratingCount} rating${
-                                                ratingCount === 1
-                                                    ? ""
-                                                    : "s"
+                                            `(${ratingCount} rating${ratingCount === 1
+                                                ? ""
+                                                : "s"
                                             })`}
                                     </p>
                                 </div>
@@ -308,88 +309,88 @@ export default async function MoviePage({
                 ====================================================== */}
                 {(movie.directors.length > 0 ||
                     movie.writers.length > 0) && (
-                    <section className="space-y-8">
-                        {/* Director */}
-                        {movie.directors.length > 0 && (
-                            <div>
-                                <h2 className="mb-4 text-lg font-semibold">
-                                    {isSeries
-                                        ? "Creator / Director"
-                                        : "Director"}
-                                </h2>
+                        <section className="space-y-8">
+                            {/* Director */}
+                            {movie.directors.length > 0 && (
+                                <div>
+                                    <h2 className="mb-4 text-lg font-semibold">
+                                        {isSeries
+                                            ? "Creator / Director"
+                                            : "Director"}
+                                    </h2>
 
-                                <div className="grid grid-cols-3 gap-x-3 gap-y-6 sm:flex sm:flex-wrap sm:gap-5">
-                                    {movie.directors.map((person) => (
-                                        <Link
-                                            key={person.personId}
-                                            href={`/people/${person.personId}`}
-                                            className="min-w-0 text-center text-xs transition-opacity hover:opacity-80 sm:w-24"
-                                        >
-                                            <div className="mx-auto mb-2 aspect-square w-full max-w-[72px] overflow-hidden rounded-full bg-muted sm:h-24 sm:w-24 sm:max-w-none">
-                                                {person.photoUrl ? (
-                                                    <img
-                                                        src={person.photoUrl}
-                                                        alt={person.name}
-                                                        className="h-full w-full object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="flex h-full w-full items-center justify-center text-xl font-semibold text-muted-foreground sm:text-2xl">
-                                                        {person.name
-                                                            .charAt(0)
-                                                            .toUpperCase()}
-                                                    </div>
-                                                )}
-                                            </div>
+                                    <div className="grid grid-cols-3 gap-x-3 gap-y-6 sm:flex sm:flex-wrap sm:gap-5">
+                                        {movie.directors.map((person) => (
+                                            <Link
+                                                key={person.personId}
+                                                href={`/people/${person.personId}`}
+                                                className="min-w-0 text-center text-xs transition-opacity hover:opacity-80 sm:w-24"
+                                            >
+                                                <div className="mx-auto mb-2 aspect-square w-full max-w-[72px] overflow-hidden rounded-full bg-muted sm:h-24 sm:w-24 sm:max-w-none">
+                                                    {person.photoUrl ? (
+                                                        <img
+                                                            src={person.photoUrl}
+                                                            alt={person.name}
+                                                            className="h-full w-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="flex h-full w-full items-center justify-center text-xl font-semibold text-muted-foreground sm:text-2xl">
+                                                            {person.name
+                                                                .charAt(0)
+                                                                .toUpperCase()}
+                                                        </div>
+                                                    )}
+                                                </div>
 
-                                            <p className="break-words font-medium">
-                                                {person.name}
-                                            </p>
-                                        </Link>
-                                    ))}
+                                                <p className="break-words font-medium">
+                                                    {person.name}
+                                                </p>
+                                            </Link>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        {/* Writers */}
-                        {movie.writers.length > 0 && (
-                            <div>
-                                <h2 className="mb-4 text-lg font-semibold">
-                                    Writers
-                                </h2>
+                            {/* Writers */}
+                            {movie.writers.length > 0 && (
+                                <div>
+                                    <h2 className="mb-4 text-lg font-semibold">
+                                        Writers
+                                    </h2>
 
-                                <div className="grid grid-cols-3 gap-x-3 gap-y-6 sm:flex sm:flex-wrap sm:gap-5">
-                                    {movie.writers.map((person) => (
-                                        <Link
-                                            key={person.personId}
-                                            href={`/people/${person.personId}`}
-                                            className="min-w-0 text-center text-xs transition-opacity hover:opacity-80 sm:w-24"
-                                        >
-                                            <div className="mx-auto mb-2 aspect-square w-full max-w-[72px] overflow-hidden rounded-full bg-muted sm:h-24 sm:w-24 sm:max-w-none">
-                                                {person.photoUrl ? (
-                                                    <img
-                                                        src={person.photoUrl}
-                                                        alt={person.name}
-                                                        className="h-full w-full object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="flex h-full w-full items-center justify-center text-xl font-semibold text-muted-foreground sm:text-2xl">
-                                                        {person.name
-                                                            .charAt(0)
-                                                            .toUpperCase()}
-                                                    </div>
-                                                )}
-                                            </div>
+                                    <div className="grid grid-cols-3 gap-x-3 gap-y-6 sm:flex sm:flex-wrap sm:gap-5">
+                                        {movie.writers.map((person) => (
+                                            <Link
+                                                key={person.personId}
+                                                href={`/people/${person.personId}`}
+                                                className="min-w-0 text-center text-xs transition-opacity hover:opacity-80 sm:w-24"
+                                            >
+                                                <div className="mx-auto mb-2 aspect-square w-full max-w-[72px] overflow-hidden rounded-full bg-muted sm:h-24 sm:w-24 sm:max-w-none">
+                                                    {person.photoUrl ? (
+                                                        <img
+                                                            src={person.photoUrl}
+                                                            alt={person.name}
+                                                            className="h-full w-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="flex h-full w-full items-center justify-center text-xl font-semibold text-muted-foreground sm:text-2xl">
+                                                            {person.name
+                                                                .charAt(0)
+                                                                .toUpperCase()}
+                                                        </div>
+                                                    )}
+                                                </div>
 
-                                            <p className="break-words font-medium">
-                                                {person.name}
-                                            </p>
-                                        </Link>
-                                    ))}
+                                                <p className="break-words font-medium">
+                                                    {person.name}
+                                                </p>
+                                            </Link>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-                    </section>
-                )}
+                            )}
+                        </section>
+                    )}
 
                 {/* =====================================================
                     CAST

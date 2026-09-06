@@ -399,8 +399,7 @@ export function AddMovieForm({ people }: AddMovieFormProps) {
               <div className="grid gap-4 sm:grid-cols-2">
                 <Input
                   name="releaseYear"
-                  placeholder="Release year (e.g. 2014)"
-                  inputMode="numeric"
+                  type="date"
                 />
 
                 <Input

@@ -108,8 +108,8 @@ export function EditMovieForm({
     const mediaLabel = isSeries
         ? "Series"
         : isGame
-          ? "Game"
-          : "Movie";
+            ? "Game"
+            : "Movie";
 
     return (
         <form
@@ -149,11 +149,10 @@ export function EditMovieForm({
                     <button
                         type="button"
                         onClick={() => setMediaType("movie")}
-                        className={`rounded-lg px-3 py-3 text-sm font-medium transition ${
-                            mediaType === "movie"
+                        className={`rounded-lg px-3 py-3 text-sm font-medium transition ${mediaType === "movie"
                                 ? "bg-primary text-primary-foreground shadow-sm"
                                 : "text-muted-foreground hover:text-foreground"
-                        }`}
+                            }`}
                     >
                         Movie
                     </button>
@@ -161,11 +160,10 @@ export function EditMovieForm({
                     <button
                         type="button"
                         onClick={() => setMediaType("series")}
-                        className={`rounded-lg px-3 py-3 text-sm font-medium transition ${
-                            mediaType === "series"
+                        className={`rounded-lg px-3 py-3 text-sm font-medium transition ${mediaType === "series"
                                 ? "bg-primary text-primary-foreground shadow-sm"
                                 : "text-muted-foreground hover:text-foreground"
-                        }`}
+                            }`}
                     >
                         Series
                     </button>
@@ -173,11 +171,10 @@ export function EditMovieForm({
                     <button
                         type="button"
                         onClick={() => setMediaType("game")}
-                        className={`rounded-lg px-3 py-3 text-sm font-medium transition ${
-                            mediaType === "game"
+                        className={`rounded-lg px-3 py-3 text-sm font-medium transition ${mediaType === "game"
                                 ? "bg-primary text-primary-foreground shadow-sm"
                                 : "text-muted-foreground hover:text-foreground"
-                        }`}
+                            }`}
                     >
                         Game
                     </button>
@@ -241,8 +238,8 @@ export function EditMovieForm({
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <Input
                             name="releaseYear"
-                            placeholder="Release year"
-                            defaultValue={releaseYear}
+                            type="date"
+                            defaultValue={releaseYear ? `${releaseYear}-01-01` : ""}
                         />
 
                         <Input
@@ -265,8 +262,8 @@ export function EditMovieForm({
                             isGame
                                 ? "Game description"
                                 : isSeries
-                                  ? "Series description"
-                                  : "Description"
+                                    ? "Series description"
+                                    : "Description"
                         }
                         rows={5}
                         defaultValue={description ?? ""}
@@ -429,8 +426,8 @@ export function EditMovieForm({
                         {isGame
                             ? "Game details"
                             : isSeries
-                              ? "Series details"
-                              : "Movie details"}
+                                ? "Series details"
+                                : "Movie details"}
                     </h2>
 
                     <p className="mt-1 text-sm text-muted-foreground">

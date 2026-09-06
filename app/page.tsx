@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/db";
-import { users } from "@/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { movies, users } from "@/db/schema";
+import { and, desc, eq, inArray, lte } from "drizzle-orm";
 
 import {
     getPopularMovies,
@@ -48,11 +48,53 @@ export default async function HomePage() {
     const upcoming = await getUpcomingMovies(5);
 
     /*
-     * HERO
+     * TOP RATED BY MEDIA TYPE
      *
-     * Use real movies from the database.
-     * Featured movie configuration only controls
-     * the hero image / trailer / badge.
+     * Movies, series and games are kept separate.
+     */
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    const topRatedMovies = await db.query.movies.findMany({
+        where: (movie) =>
+            and(
+                eq(movie.mediaType, "movie"),
+                lte(movie.releaseDate, today)
+            ),
+        orderBy: [
+            desc(movies.imdbScore),
+            desc(movies.createdAt),
+        ],
+        limit: 5,
+    });
+
+    const topRatedSeries = await db.query.movies.findMany({
+        where: (movie) =>
+            and(
+                eq(movie.mediaType, "series"),
+                lte(movie.releaseDate, today)
+            ),
+        orderBy: [
+            desc(movies.imdbScore),
+            desc(movies.createdAt),
+        ],
+        limit: 5,
+    });
+
+    const topRatedGames = await db.query.movies.findMany({
+        where: (movie) =>
+            and(
+                eq(movie.mediaType, "game"),
+                lte(movie.releaseDate, today)
+            ),
+        orderBy: [
+            desc(movies.imdbScore),
+            desc(movies.createdAt),
+        ],
+        limit: 5,
+    });
+    /*
+     * HERO
      */
 
     const featuredIds = FEATURED_MOVIES.map(
@@ -83,21 +125,6 @@ export default async function HomePage() {
                     > => !!movie
                 )
             : popular.slice(0, 5);
-
-    const heroImages = Object.fromEntries(
-        heroSourceMovies.map((movie) => {
-            const featured = FEATURED_MOVIES.find(
-                (item) => item.movieId === movie.id
-            );
-
-            return [
-                movie.id,
-                featured?.image ??
-                movie.backdropUrl ??
-                movie.posterUrl,
-            ];
-        })
-    );
 
     const heroGenreEntries = await Promise.all(
         heroSourceMovies.map(async (movie) => [
@@ -234,13 +261,22 @@ export default async function HomePage() {
                             href="/discover"
                         >
                             {upcoming.length > 0 ? (
-                                <UpcomingList movies={upcoming} />
+                                <UpcomingList
+                                    movies={upcoming}
+                                />
                             ) : (
                                 <p className="rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">
                                     Nothing upcoming yet.
                                 </p>
                             )}
                         </SectionBlock>
+
+                        {/* SERIES + GAMES */}
+
+                        <SecondaryMediaSection
+                            series={topRatedSeries}
+                            games={topRatedGames}
+                        />
 
                         {/* FEATURE CARDS */}
 
@@ -278,11 +314,11 @@ export default async function HomePage() {
                                 taste with friends.
                             </p>
 
-                            <div className="mt-6 flex justify-center gap-3">
+                            <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
                                 <Link href="/register">
                                     <Button
                                         size="lg"
-                                        className="px-6"
+                                        className="w-full px-6 sm:w-auto"
                                     >
                                         Get started
                                     </Button>
@@ -292,7 +328,7 @@ export default async function HomePage() {
                                     <Button
                                         variant="outline"
                                         size="lg"
-                                        className="px-6"
+                                        className="w-full px-6 sm:w-auto"
                                     >
                                         Log in
                                     </Button>
@@ -305,13 +341,24 @@ export default async function HomePage() {
 
                     <aside className="hidden w-72 shrink-0 space-y-8 xl:block">
 
-                        {topRated.length > 0 && (
+                        {topRatedMovies.length > 0 && (
                             <RightPanel
-                                title="Top Rated"
+                                title="Top Rated Movies"
                                 href="/discover"
                             >
                                 <TopRatedList
-                                    movies={topRated}
+                                    movies={topRatedMovies}
+                                />
+                            </RightPanel>
+                        )}
+
+                        {topRatedSeries.length > 0 && (
+                            <RightPanel
+                                title="Top Rated Series"
+                                href="/discover"
+                            >
+                                <TopRatedList
+                                    movies={topRatedSeries}
                                 />
                             </RightPanel>
                         )}
@@ -326,10 +373,20 @@ export default async function HomePage() {
                                 />
                             </RightPanel>
                         )}
+
+                        {topRatedGames.length > 0 && (
+                            <RightPanel
+                                title="Top Rated Games"
+                                href="/discover"
+                            >
+                                <TopRatedList
+                                    movies={topRatedGames}
+                                />
+                            </RightPanel>
+                        )}
+
                     </aside>
                 </div>
-
-                {/* MOBILE BOTTOM NAV */}
 
                 <MobileBottomNav loggedIn={false} />
             </main>
@@ -395,6 +452,10 @@ export default async function HomePage() {
                                     ? profile.username
                                     : "Cinephile"}
                             </h1>
+
+                            <p className="mt-1 text-sm text-muted-foreground">
+                                Your personal place for movies, series and games.
+                            </p>
                         </div>
 
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -422,6 +483,7 @@ export default async function HomePage() {
                                 title="Friends"
                                 description="Your cinema network"
                             />
+
                         </div>
                     </section>
 
@@ -481,13 +543,23 @@ export default async function HomePage() {
                         href="/discover"
                     >
                         {upcoming.length > 0 ? (
-                            <UpcomingList movies={upcoming} />
+                            <UpcomingList
+                                movies={upcoming}
+                            />
                         ) : (
                             <p className="rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">
                                 Nothing upcoming yet.
                             </p>
                         )}
                     </SectionBlock>
+
+                    {/* SMALL SERIES + GAMES */}
+
+                    <SecondaryMediaSection
+                        series={topRatedSeries}
+                        games={topRatedGames}
+                    />
+
                     {/* EXPLORE SECTION */}
 
                     <section className="rounded-2xl border border-border bg-card p-8 text-center sm:p-12">
@@ -504,15 +576,18 @@ export default async function HomePage() {
                             movies worth adding to your watchlist.
                         </p>
 
-                        <div className="mt-6 flex justify-center gap-3">
+                        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
                             <Link href="/discover">
-                                <Button>
+                                <Button className="w-full sm:w-auto">
                                     Explore Discover
                                 </Button>
                             </Link>
 
                             <Link href="/lists">
-                                <Button variant="outline">
+                                <Button
+                                    variant="outline"
+                                    className="w-full sm:w-auto"
+                                >
                                     Browse Lists
                                 </Button>
                             </Link>
@@ -524,13 +599,24 @@ export default async function HomePage() {
 
                 <aside className="hidden w-72 shrink-0 space-y-8 xl:block">
 
-                    {topRated.length > 0 && (
+                    {topRatedMovies.length > 0 && (
                         <RightPanel
-                            title="Top Rated"
+                            title="Top Rated Movies"
                             href="/discover"
                         >
                             <TopRatedList
-                                movies={topRated}
+                                movies={topRatedMovies}
+                            />
+                        </RightPanel>
+                    )}
+
+                    {topRatedSeries.length > 0 && (
+                        <RightPanel
+                            title="Top Rated Series"
+                            href="/discover"
+                        >
+                            <TopRatedList
+                                movies={topRatedSeries}
                             />
                         </RightPanel>
                     )}
@@ -545,19 +631,154 @@ export default async function HomePage() {
                             />
                         </RightPanel>
                     )}
+
+                    {topRatedGames.length > 0 && (
+                        <RightPanel
+                            title="Top Rated Games"
+                            href="/discover"
+                        >
+                            <TopRatedList
+                                movies={topRatedGames}
+                            />
+                        </RightPanel>
+                    )}
+
                 </aside>
             </div>
-
-            {/* MOBILE BOTTOM NAV */}
 
             <MobileBottomNav loggedIn={true} />
         </main>
     );
 }
 
-/* ------------------------------------------------ */
-/* COMPONENTS                                       */
-/* ------------------------------------------------ */
+/* ========================================================= */
+/* SECONDARY SERIES + GAMES                                 */
+/* ========================================================= */
+
+function SecondaryMediaSection({
+    series,
+    games,
+}: {
+    series: any[];
+    games: any[];
+}) {
+    if (series.length === 0 && games.length === 0) {
+        return null;
+    }
+
+    return (
+        <section className="border-t border-border pt-10">
+            <div className="mb-6">
+                <p className="text-xs font-medium uppercase tracking-wider text-primary">
+                    More to explore
+                </p>
+
+                <h2 className="mt-1 text-xl font-semibold sm:text-2xl">
+                    Beyond movies
+                </h2>
+
+                <p className="mt-1 text-sm text-muted-foreground">
+                    A few favorites from the rest of the Cinephile catalog.
+                </p>
+            </div>
+
+            <div className="grid gap-8 lg:grid-cols-2">
+
+                {series.length > 0 && (
+                    <SecondaryMediaColumn
+                        title="Best Series"
+                        subtitle="Highly rated"
+                        items={series}
+                    />
+                )}
+
+                {games.length > 0 && (
+                    <SecondaryMediaColumn
+                        title="Top Rated Games"
+                        subtitle="Worth playing"
+                        items={games}
+                    />
+                )}
+
+            </div>
+        </section>
+    );
+}
+
+/* ========================================================= */
+/* SECONDARY MEDIA COLUMN                                   */
+/* ========================================================= */
+
+function SecondaryMediaColumn({
+    title,
+    subtitle,
+    items,
+}: {
+    title: string;
+    subtitle: string;
+    items: any[];
+}) {
+    return (
+        <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="mb-4 flex items-end justify-between gap-3">
+                <div>
+                    <p className="text-xs font-medium uppercase tracking-wider text-primary">
+                        {subtitle}
+                    </p>
+
+                    <h3 className="mt-1 text-lg font-semibold">
+                        {title}
+                    </h3>
+                </div>
+
+                <Link
+                    href="/discover"
+                    className="text-xs font-medium text-primary hover:underline"
+                >
+                    Explore →
+                </Link>
+            </div>
+
+            <div className="grid grid-cols-4 gap-3">
+                {items.map((item) => (
+                    <Link
+                        key={item.id}
+                        href={`/movie/${item.id}`}
+                        className="group min-w-0"
+                    >
+                        <div className="aspect-[2/3] overflow-hidden rounded-lg bg-muted">
+                            {item.posterUrl ? (
+                                <img
+                                    src={item.posterUrl}
+                                    alt={item.title}
+                                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                />
+                            ) : (
+                                <div className="flex h-full items-center justify-center p-2 text-center text-xs text-muted-foreground">
+                                    {item.title}
+                                </div>
+                            )}
+                        </div>
+
+                        <p className="mt-2 truncate text-xs font-medium">
+                            {item.title}
+                        </p>
+
+                        {item.imdbScore && (
+                            <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                ★ {item.imdbScore}
+                            </p>
+                        )}
+                    </Link>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+/* ========================================================= */
+/* SECTION                                                   */
+/* ========================================================= */
 
 function SectionBlock({
     id,
@@ -601,6 +822,10 @@ function SectionBlock({
     );
 }
 
+/* ========================================================= */
+/* RIGHT PANEL                                               */
+/* ========================================================= */
+
 function RightPanel({
     title,
     href,
@@ -629,6 +854,10 @@ function RightPanel({
         </div>
     );
 }
+
+/* ========================================================= */
+/* MOBILE CATEGORY PILLS                                    */
+/* ========================================================= */
 
 function MobileCategoryPills() {
     const items = [
@@ -665,6 +894,10 @@ function MobileCategoryPills() {
     );
 }
 
+/* ========================================================= */
+/* FEATURE CARD                                              */
+/* ========================================================= */
+
 function FeatureCard({
     title,
     description,
@@ -684,6 +917,10 @@ function FeatureCard({
         </div>
     );
 }
+
+/* ========================================================= */
+/* QUICK ACTION                                              */
+/* ========================================================= */
 
 function QuickAction({
     href,
@@ -715,6 +952,10 @@ function QuickAction({
         </Link>
     );
 }
+
+/* ========================================================= */
+/* EMPTY WATCHLIST                                           */
+/* ========================================================= */
 
 function EmptyMovieSection() {
     return (

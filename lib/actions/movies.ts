@@ -247,9 +247,7 @@ export async function createMovieAction(formData: FormData) {
       mediaType: data.mediaType,
       originalTitle: data.originalTitle || null,
       posterUrl: posterUrl ?? null,
-      releaseDate: data.releaseYear
-        ? `${data.releaseYear}-01-01`
-        : null,
+      releaseDate: data.releaseYear || null,
       runtimeMinutes: data.runtimeMinutes
         ? parseInt(data.runtimeMinutes)
         : null,
@@ -531,9 +529,7 @@ export async function updateMovieAction(
       title: data.title,
       originalTitle: data.originalTitle || null,
       posterUrl,
-      releaseDate: data.releaseYear
-        ? `${data.releaseYear}-01-01`
-        : null,
+      releaseDate: data.releaseYear || null,
       runtimeMinutes: data.runtimeMinutes
         ? parseInt(data.runtimeMinutes)
         : null,
