@@ -40,40 +40,55 @@ export async function updateProfileAction(formData: FormData) {
 }
 
 export async function uploadAvatarAction(formData: FormData) {
-  const user = await requireUser();
-  const file = formData.get("avatar") as File;
+    const user = await requireUser();
 
-  if (!file || file.size === 0) {
-    return { error: "No file selected" };
-  }
-  if (!file.type.startsWith("image/")) {
-    return { error: "File must be an image" };
-  }
-  if (file.size > 2 * 1024 * 1024) {
-    return { error: "Image must be under 2MB" };
-  }
+    const file = formData.get("avatar") as File;
 
-  const supabase = await createClient();
-  const ext = file.name.split(".").pop();
-  const path = `${user.id}/avatar.${ext}`;
+    if (!file || file.size === 0) {
+        return { error: "No file selected" };
+    }
 
-  const { error: uploadError } = await supabase.storage
-    .from("avatars")
-    .upload(path, file, { upsert: true });
+    if (!file.type.startsWith("image/")) {
+        return { error: "File must be an image" };
+    }
 
-  if (uploadError) {
-    return { error: uploadError.message };
-  }
+    if (file.size > 2 * 1024 * 1024) {
+        return { error: "Image must be under 2MB" };
+    }
 
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from("avatars").getPublicUrl(path);
+    const supabase = await createClient();
 
-  await db
-    .update(users)
-    .set({ avatarUrl: publicUrl })
-    .where(eq(users.id, user.id));
+    const ext =
+        file.name.split(".").pop()?.toLowerCase() || "jpg";
 
-  revalidatePath("/profile");
-  return { success: true, url: publicUrl };
+    const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, {
+            upsert: false,
+            cacheControl: "3600",
+        });
+
+    if (uploadError) {
+        return { error: uploadError.message };
+    }
+
+    const {
+        data: { publicUrl },
+    } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(path);
+
+    await db
+        .update(users)
+        .set({
+            avatarUrl: publicUrl,
+        })
+        .where(eq(users.id, user.id));
+
+    return {
+        success: true,
+        url: publicUrl,
+    };
 }
