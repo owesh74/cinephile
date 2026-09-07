@@ -6,7 +6,6 @@ import { and, desc, eq, inArray, lte } from "drizzle-orm";
 import {
     getPopularMovies,
     getContinueWatching,
-    getTopRatedMovies,
     getUpcomingMovies,
     getMovieGenreNames,
     getUserMovieStatus,
@@ -43,60 +42,68 @@ export default async function HomePage() {
         data: { user },
     } = await supabase.auth.getUser();
 
-    const popular = await getPopularMovies(9);
-    const topRated = await getTopRatedMovies(5);
-    const upcoming = await getUpcomingMovies(5);
+const popular = await getPopularMovies(9);
 
-    /*
-     * TOP RATED BY MEDIA TYPE
-     *
-     * Movies, series and games are kept separate.
-     */
+const today = new Date().toISOString().slice(0, 10);
 
-    const today = new Date().toISOString().slice(0, 10);
+const topRated = await db.query.movies.findMany({
+    where: and(
+        inArray(movies.mediaType, ["movie", "series"]),
+        lte(movies.releaseDate, today)
+    ),
+    orderBy: [
+        desc(movies.imdbScore),
+        desc(movies.createdAt),
+    ],
+    limit: 5,
+});
 
-    const topRatedMovies = await db.query.movies.findMany({
-        where: (movie) =>
-            and(
-                eq(movie.mediaType, "movie"),
-                lte(movie.releaseDate, today)
-            ),
-        orderBy: [
-            desc(movies.imdbScore),
-            desc(movies.createdAt),
-        ],
-        limit: 5,
-    });
+const upcoming = await getUpcomingMovies(5);
 
-    const topRatedSeries = await db.query.movies.findMany({
-        where: (movie) =>
-            and(
-                eq(movie.mediaType, "series"),
-                lte(movie.releaseDate, today)
-            ),
-        orderBy: [
-            desc(movies.imdbScore),
-            desc(movies.createdAt),
-        ],
-        limit: 5,
-    });
+/*
+ * TOP RATED BY MEDIA TYPE
+ *
+ * Movies, series and games are kept separate.
+ */
 
-    const topRatedGames = await db.query.movies.findMany({
-        where: (movie) =>
-            and(
-                eq(movie.mediaType, "game"),
-                lte(movie.releaseDate, today)
-            ),
-        orderBy: [
-            desc(movies.imdbScore),
-            desc(movies.createdAt),
-        ],
-        limit: 5,
-    });
-    /*
-     * HERO
-     */
+const topRatedMovies = await db.query.movies.findMany({
+    where: and(
+        eq(movies.mediaType, "movie"),
+        lte(movies.releaseDate, today)
+    ),
+    orderBy: [
+        desc(movies.imdbScore),
+        desc(movies.createdAt),
+    ],
+    limit: 5,
+});
 
+const topRatedSeries = await db.query.movies.findMany({
+    where: and(
+        eq(movies.mediaType, "series"),
+        lte(movies.releaseDate, today)
+    ),
+    orderBy: [
+        desc(movies.imdbScore),
+        desc(movies.createdAt),
+    ],
+    limit: 5,
+});
+
+const topRatedGames = await db.query.movies.findMany({
+    where: and(
+        eq(movies.mediaType, "game"),
+        lte(movies.releaseDate, today)
+    ),
+    orderBy: [
+        desc(movies.imdbScore),
+        desc(movies.createdAt),
+    ],
+    limit: 5,
+});
+     /*
+ * HERO
+ */
     const featuredIds = FEATURED_MOVIES.map(
         (item) => item.movieId
     );
@@ -333,7 +340,7 @@ export default async function HomePage() {
                                         Log in
                                     </Button>
                                 </Link>
-                            </div>
+                            top</div>
                         </section>
                     </div>
 
